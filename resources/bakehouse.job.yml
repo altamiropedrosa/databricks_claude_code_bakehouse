@@ -1,6 +1,7 @@
 # Orchestrates the medallion pipeline. The schedule is paused in dev through the
 # target presets (trigger_pause_status) and active in prod.
-# After each refresh, the published tables are checked against contracts/ (see contracts/README.md).
+# After each refresh, the published tables are checked against contracts/ (see contracts/README.md)
+# and the metric views of semantic/ are republished (see semantic/README.md).
 resources:
   jobs:
     bakehouse_medallion_job:
@@ -31,3 +32,15 @@ resources:
               - ${var.catalog}
               - --contracts-dir
               - ${workspace.file_path}/contracts
+        # Semantic layer: only republished when the contracts it is built on hold.
+        - task_key: publish_metric_views
+          depends_on:
+            - task_key: enforce_data_contracts
+          environment_key: contracts
+          spark_python_task:
+            python_file: ../src/jobs/publish_metric_views.py
+            parameters:
+              - --catalog
+              - ${var.catalog}
+              - --semantic-dir
+              - ${workspace.file_path}/semantic

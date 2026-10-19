@@ -1,0 +1,119 @@
+# Metric view gold.sales_metrics: the governed sales KPIs of the Bakehouse.
+# Published by src/jobs/publish_metric_views.py, which prefixes `source` with the target catalog.
+# Rules (tests/test_semantic_layer.py): the source has a data contract, every column used here is
+# in that contract and none is classified as personal data, every field has comment + display_name.
+version: 1.1
+source: silver.transactions
+comment: >-
+  Governed sales metrics of the Bakehouse franchises, one row per sales transaction in the source.
+  Use these measures instead of re-implementing revenue, orders or average ticket in queries.
+dimensions:
+  - name: transaction_date
+    expr: transaction_date
+    display_name: Data da venda
+    comment: Calendar date of the sale
+    synonyms: [data, dia, date, sale date]
+  - name: transaction_month
+    expr: transaction_month
+    display_name: Mês da venda
+    comment: First day of the month of the sale
+    synonyms: [mês, mes, month]
+  - name: transaction_weekday
+    expr: transaction_weekday
+    display_name: Dia da semana
+    comment: Weekday name of the sale, e.g. Monday
+    synonyms: [dia da semana, weekday]
+  - name: transaction_hour
+    expr: transaction_hour
+    display_name: Hora da venda
+    comment: Hour of the day of the sale, 0 to 23
+    synonyms: [hora, hour]
+  - name: product
+    expr: product
+    display_name: Produto
+    comment: Product name
+    synonyms: [produto, item, cookie]
+  - name: payment_method
+    expr: payment_method
+    display_name: Forma de pagamento
+    comment: Payment method in lower case, expected visa, mastercard or amex
+    synonyms: [pagamento, bandeira, cartão, payment]
+  - name: franchise_id
+    expr: franchise_id
+    display_name: ID da franquia
+    comment: Franchise identifier
+  - name: franchise_name
+    expr: franchise_name
+    display_name: Franquia
+    comment: Franchise name
+    synonyms: [franquia, loja, store, franchise]
+  - name: franchise_city
+    expr: franchise_city
+    display_name: Cidade da franquia
+    comment: City of the franchise where the sale happened
+    synonyms: [cidade, city]
+  - name: franchise_country
+    expr: franchise_country
+    display_name: País da franquia
+    comment: Country of the franchise where the sale happened
+    synonyms: [país, pais, country]
+  - name: franchise_size
+    expr: franchise_size
+    display_name: Porte da franquia
+    comment: Franchise size
+    synonyms: [porte, tamanho, size]
+  - name: customer_country
+    expr: customer_country
+    display_name: País do cliente
+    comment: Country of the customer
+    synonyms: [país do cliente, customer country]
+  - name: customer_continent
+    expr: customer_continent
+    display_name: Continente do cliente
+    comment: Continent of the customer
+    synonyms: [continente, continent]
+measures:
+  - name: revenue
+    expr: SUM(total_price)
+    display_name: Receita
+    comment: Total revenue, sum of the transaction amounts
+    synonyms: [receita, faturamento, vendas, revenue, sales]
+    format:
+      type: number
+      decimal_places: {type: exact, places: 2}
+  - name: orders
+    expr: COUNT(1)
+    display_name: Pedidos
+    comment: Number of sales transactions
+    synonyms: [pedidos, transações, vendas realizadas, orders]
+  - name: units_sold
+    expr: SUM(quantity)
+    display_name: Unidades vendidas
+    comment: Total units sold
+    synonyms: [unidades, quantidade, units]
+  - name: avg_ticket
+    expr: MEASURE(revenue) / MEASURE(orders)
+    display_name: Ticket médio
+    comment: Average revenue per order, revenue divided by orders at the queried grain
+    synonyms: [ticket médio, ticket medio, valor médio do pedido, average order value, aov]
+    format:
+      type: number
+      decimal_places: {type: exact, places: 2}
+  - name: units_per_order
+    expr: MEASURE(units_sold) / MEASURE(orders)
+    display_name: Unidades por pedido
+    comment: Average units per order
+    synonyms: [itens por pedido, units per order]
+    format:
+      type: number
+      decimal_places: {type: max, places: 2}
+  - name: unique_customers
+    expr: COUNT(DISTINCT customer_id)
+    display_name: Clientes únicos
+    comment: Distinct customers, recomputed at the queried grain (do not sum across rows)
+    synonyms: [clientes, clientes únicos, customers]
+  - name: active_franchises
+    expr: COUNT(DISTINCT franchise_id)
+    display_name: Franquias ativas
+    comment: Distinct franchises with at least one sale, recomputed at the queried grain
+    synonyms: [franquias ativas, lojas ativas, active franchises]
