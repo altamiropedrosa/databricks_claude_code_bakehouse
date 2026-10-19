@@ -108,13 +108,15 @@ exclusivamente sobre a camada gold.
 │   │   ├── bronze/                     # 5 tabelas de ingestão
 │   │   ├── silver/                     # 4 tabelas limpas
 │   │   └── gold/                       # 6 marts
-│   └── dashboards/bakehouse_sales.lvdash.json
+│   ├── dashboards/bakehouse_sales.lvdash.json
+│   └── jobs/enforce_data_contracts.py  # Confere tabelas publicadas x contratos (tarefa do job)
 ├── contracts/                          # Contratos de dados (ODCS v3), ver contracts/README.md
 │   ├── silver/transactions.yaml
 │   └── gold/                           # 1 contrato por mart
 ├── tests/
 │   ├── test_bundle_conventions.py      # Testes offline das convenções do bundle
-│   └── test_data_contracts.py          # Testes offline: SQL x contrato e regras de versão
+│   ├── test_data_contracts.py          # Testes offline: SQL x contrato e regras de versão
+│   └── test_enforce_data_contracts.py  # Testes offline da verificação em execução
 └── .github/workflows/databricks.yml    # Pipeline de CI/CD
 ```
 
@@ -169,6 +171,10 @@ lendo a origem, configuração do pipeline vinda do bundle e widgets do dashboar
 Os testes em `tests/test_data_contracts.py` verificam os [contratos de dados](contracts/README.md): toda tabela
 gold tem contrato, o SQL declara exatamente as colunas, tipos, `NOT NULL`, comentários e expectations do
 contrato, e mudanças incompatíveis exigem versão MAJOR em relação ao `origin/master`.
+
+Em execução, o job `bakehouse_medallion_job` roda a tarefa `enforce_data_contracts` depois do pipeline: ela
+confere o schema publicado no Unity Catalog, a unicidade da chave primária e o prazo de atualização de cada
+contrato, aplica as tags de contrato e de dado pessoal, e falha a execução se algum contrato for violado.
 
 ## CI/CD
 

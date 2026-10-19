@@ -15,6 +15,9 @@ base da camada semântica.
 | SQL do pipeline | O `CREATE OR REFRESH` declara o schema explícito: tipo, `NOT NULL` (= `required: true`) e `COMMENT` (= `description`) de cada coluna. O Unity Catalog passa a mostrar a documentação do contrato. |
 | Expectations | Os `CONSTRAINT ... EXPECT` do SQL espelham a seção `quality` (`engine: lakeflow`). `onViolation`: `warn`, `drop_row` ou `fail_update`. |
 | `tests/test_data_contracts.py` (CI, offline) | Toda tabela gold tem contrato; SQL e contrato declaram as mesmas colunas, tipos, `NOT NULL`, comentários e expectations; regras de versão abaixo. |
+| Tarefa `enforce_data_contracts` do job (após cada execução do pipeline) | Confere o que **foi publicado**: schema no Unity Catalog igual ao contrato, chave primária sem duplicatas e atualização dentro do `latency` do SLA. Aplica as tags `data_contract`/`data_contract_version` na tabela e `classification` nas colunas com dado pessoal. Qualquer violação falha a execução do job. |
+
+Para rodar só a verificação, sem gravar tags: `src/jobs/enforce_data_contracts.py --catalog <catálogo> --contracts-dir <pasta> --skip-tags`.
 
 `physicalName` nunca leva o catálogo (`gold.top_customers`): o catálogo vem do target do bundle.
 
