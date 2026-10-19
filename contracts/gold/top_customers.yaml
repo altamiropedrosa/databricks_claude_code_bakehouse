@@ -1,0 +1,98 @@
+# Data contract (ODCS v3) for gold.top_customers. Rules: contracts/README.md.
+apiVersion: v3.0.2
+kind: DataContract
+id: bakehouse.gold.top_customers
+name: top_customers
+version: 1.0.0
+status: active
+domain: bakehouse
+dataProduct: bakehouse_medallion
+team:
+  - username: altamiropedrosa
+    role: owner
+description:
+  purpose: Customers ranked by revenue, with their favorite product.
+  usage: Top-N customer lists. Filter on customer_rank.
+  limitations: Only customers with at least one purchase are listed. Contains personal data.
+schema:
+  - name: top_customers
+    physicalName: gold.top_customers
+    physicalType: materialized_view
+    description: Customers ranked by revenue, with favorite product
+    dataGranularityDescription: One row per customer with purchases.
+    properties:
+      - name: customer_rank
+        logicalType: integer
+        physicalType: INT
+        required: true
+        primaryKey: true
+        primaryKeyPosition: 1
+        description: Rank by revenue, 1 is the highest, ties broken by customer_id
+      - name: customer_id
+        logicalType: integer
+        physicalType: BIGINT
+        required: false
+        description: Customer identifier
+      - name: customer_name
+        logicalType: string
+        physicalType: STRING
+        required: false
+        classification: restricted
+        description: Customer full name (personal data)
+      - name: country
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Customer country
+      - name: continent
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Customer continent
+      - name: orders
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Number of purchases
+      - name: units_sold
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Total units bought
+      - name: revenue
+        logicalType: number
+        physicalType: DECIMAL(22,2)
+        required: true
+        description: Total revenue from the customer, sum of total_price
+      - name: avg_ticket
+        logicalType: number
+        physicalType: DECIMAL(12,2)
+        required: true
+        description: Average revenue per purchase
+      - name: favorite_product
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Product with the most units bought, ties broken alphabetically
+      - name: franchises_visited
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Distinct franchises where the customer bought
+      - name: first_purchase_date
+        logicalType: date
+        physicalType: DATE
+        required: true
+        description: Date of the first purchase
+      - name: last_purchase_date
+        logicalType: date
+        physicalType: DATE
+        required: true
+        description: Date of the most recent purchase
+slaProperties:
+  - property: frequency
+    value: 1
+    unit: d
+  - property: latency
+    value: 26
+    unit: h

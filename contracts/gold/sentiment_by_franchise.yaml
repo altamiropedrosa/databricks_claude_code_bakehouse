@@ -1,0 +1,109 @@
+# Data contract (ODCS v3) for gold.sentiment_by_franchise. Rules: contracts/README.md.
+apiVersion: v3.0.2
+kind: DataContract
+id: bakehouse.gold.sentiment_by_franchise
+name: sentiment_by_franchise
+version: 1.0.0
+status: active
+domain: bakehouse
+dataProduct: bakehouse_medallion
+team:
+  - username: altamiropedrosa
+    role: owner
+description:
+  purpose: Customer review sentiment per franchise, scored with ai_analyze_sentiment.
+  usage: Satisfaction view of the sales dashboard.
+  limitations: >-
+    Franchises without reviews are kept with zero counts and NULL ratios. Ratios ignore
+    unscored reviews. net_sentiment = (positive - negative) / scored reviews, in [-1, 1].
+schema:
+  - name: sentiment_by_franchise
+    physicalName: gold.sentiment_by_franchise
+    physicalType: materialized_view
+    description: Customer review sentiment counts and ratios per franchise
+    dataGranularityDescription: One row per franchise.
+    properties:
+      - name: franchise_id
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        primaryKey: true
+        primaryKeyPosition: 1
+        description: Franchise identifier
+      - name: franchise_name
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise name
+      - name: city
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise city
+      - name: country
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise country
+      - name: latitude
+        logicalType: number
+        physicalType: DOUBLE
+        required: false
+        description: Franchise latitude
+      - name: longitude
+        logicalType: number
+        physicalType: DOUBLE
+        required: false
+        description: Franchise longitude
+      - name: reviews
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Number of reviews
+      - name: positive_reviews
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Reviews scored as positive
+      - name: negative_reviews
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Reviews scored as negative
+      - name: neutral_reviews
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Reviews scored as neutral
+      - name: mixed_reviews
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Reviews scored as mixed
+      - name: unscored_reviews
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Reviews without a sentiment score
+      - name: positive_ratio
+        logicalType: number
+        physicalType: DECIMAL(5,4)
+        required: false
+        description: Positive share of the scored reviews, between 0 and 1
+      - name: net_sentiment
+        logicalType: number
+        physicalType: DECIMAL(5,4)
+        required: false
+        description: Positive minus negative share of the scored reviews, between -1 and 1
+      - name: last_review_date
+        logicalType: date
+        physicalType: DATE
+        required: false
+        description: Date of the most recent review
+slaProperties:
+  - property: frequency
+    value: 1
+    unit: d
+  - property: latency
+    value: 26
+    unit: h

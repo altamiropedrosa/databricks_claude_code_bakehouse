@@ -1,0 +1,127 @@
+# Data contract (ODCS v3) for gold.franchise_performance. Rules: contracts/README.md.
+apiVersion: v3.0.2
+kind: DataContract
+id: bakehouse.gold.franchise_performance
+name: franchise_performance
+version: 1.0.0
+status: active
+domain: bakehouse
+dataProduct: bakehouse_medallion
+team:
+  - username: altamiropedrosa
+    role: owner
+description:
+  purpose: Lifetime sales performance of each franchise, with location for maps.
+  usage: Franchise rankings and maps in the sales dashboard.
+  limitations: Franchises without sales are kept with zero measures and NULL avg_ticket and sale dates.
+schema:
+  - name: franchise_performance
+    physicalName: gold.franchise_performance
+    physicalType: materialized_view
+    description: Lifetime performance per franchise with city, country and coordinates
+    dataGranularityDescription: One row per franchise.
+    properties:
+      - name: franchise_id
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        primaryKey: true
+        primaryKeyPosition: 1
+        description: Franchise identifier
+      - name: franchise_name
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise name
+      - name: city
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise city
+      - name: district
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise district
+      - name: country
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise country
+      - name: size
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise size
+      - name: latitude
+        logicalType: number
+        physicalType: DOUBLE
+        required: false
+        description: Franchise latitude
+      - name: longitude
+        logicalType: number
+        physicalType: DOUBLE
+        required: false
+        description: Franchise longitude
+      - name: supplier_name
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Name of the franchise supplier, NULL when unknown
+      - name: orders
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Number of sales transactions
+      - name: units_sold
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Total units sold
+      - name: revenue
+        logicalType: number
+        physicalType: DECIMAL(22,2)
+        required: true
+        description: Total revenue, sum of total_price
+      - name: avg_ticket
+        logicalType: number
+        physicalType: DECIMAL(12,2)
+        required: false
+        description: Average revenue per order, NULL without sales
+      - name: unique_customers
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Distinct customers who bought at the franchise
+      - name: active_days
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Distinct days with at least one sale
+      - name: first_sale_date
+        logicalType: date
+        physicalType: DATE
+        required: false
+        description: Date of the first sale
+      - name: last_sale_date
+        logicalType: date
+        physicalType: DATE
+        required: false
+        description: Date of the last sale
+      - name: is_active
+        logicalType: boolean
+        physicalType: BOOLEAN
+        required: true
+        description: Whether the franchise has at least one sale
+      - name: revenue_rank
+        logicalType: integer
+        physicalType: INT
+        required: true
+        description: Rank by revenue across franchises, 1 is the highest
+slaProperties:
+  - property: frequency
+    value: 1
+    unit: d
+  - property: latency
+    value: 26
+    unit: h
