@@ -111,8 +111,10 @@ exclusivamente sobre a camada gold.
 │   ├── dashboards/bakehouse_sales.lvdash.json
 │   └── jobs/
 │       ├── enforce_data_contracts.py   # Confere tabelas publicadas x contratos (tarefa do job)
-│       └── publish_metric_views.py     # Publica a camada semântica (tarefa do job)
+│       ├── publish_metric_views.py     # Publica a camada semântica (tarefa do job)
+│       └── publish_genie_space.py      # Cria/atualiza o Genie space (tarefa do job)
 ├── semantic/gold/sales_metrics.yaml    # Metric view de vendas, ver semantic/README.md
+├── genie/                              # Genie spaces versionados, ver genie/README.md
 ├── contracts/                          # Contratos de dados (ODCS v3), ver contracts/README.md
 │   ├── silver/transactions.yaml
 │   └── gold/                           # 1 contrato por mart
@@ -120,7 +122,8 @@ exclusivamente sobre a camada gold.
 │   ├── test_bundle_conventions.py      # Testes offline das convenções do bundle
 │   ├── test_data_contracts.py          # Testes offline: SQL x contrato e regras de versão
 │   ├── test_enforce_data_contracts.py  # Testes offline da verificação em execução
-│   └── test_semantic_layer.py          # Testes offline da camada semântica x contratos
+│   ├── test_semantic_layer.py          # Testes offline da camada semântica x contratos
+│   └── test_genie_space.py             # Testes offline do Genie space
 └── .github/workflows/databricks.yml    # Pipeline de CI/CD
 ```
 
@@ -183,7 +186,8 @@ Em execução, o job `bakehouse_medallion_job` roda a tarefa `enforce_data_contr
 confere o schema publicado no Unity Catalog, a unicidade da chave primária e o prazo de atualização de cada
 contrato, aplica as tags de contrato e de dado pessoal, e falha a execução se algum contrato for violado.
 Em seguida, a tarefa `publish_metric_views` republica a [camada semântica](semantic/README.md)
-(`gold.sales_metrics`), que o dashboard usa para os dados de vendas.
+(`gold.sales_metrics`), que o dashboard usa para os dados de vendas, e a tarefa `publish_genie_space`
+cria ou atualiza o [Genie space](genie/README.md) `[<target>] Bakehouse - Vendas e Satisfação` em cima dela.
 
 ## CI/CD
 

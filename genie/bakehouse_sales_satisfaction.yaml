@@ -1,0 +1,134 @@
+# Genie space "Bakehouse - Vendas e Satisfação": natural language questions for business managers.
+# Published by src/jobs/publish_genie_space.py as "[<target>] <title>". `space` is the Genie
+# serialized_space (version 2) written as YAML: ${catalog} becomes the target catalog, single
+# strings become the arrays the API expects, and id-keyed lists are sorted on publish.
+# Rules (tests/test_genie_space.py): sources are the semantic layer or contracted tables, no
+# personal data, SQL snippets qualify every column, every example SQL only reads attached sources.
+title: Bakehouse - Vendas e Satisfação
+description: >-
+  Responde perguntas de gestores de negócio sobre as vendas da rede Bakehouse (receita, pedidos,
+  ticket médio, unidades, produtos, franquias, cidades, países, forma de pagamento, dia e hora) e
+  sobre a satisfação dos clientes (sentimento das avaliações por franquia). Vendas vêm da metric
+  view governada gold.sales_metrics; satisfação vem de gold.sentiment_by_franchise.
+space:
+  version: 2
+  config:
+    sample_questions:
+      - id: a1000000000000000000000000000001
+        question: Qual franquia teve a maior receita no último mês?
+      - id: a1000000000000000000000000000002
+        question: Como evoluiu a receita diária por país?
+      - id: a1000000000000000000000000000003
+        question: Qual produto mais vende em cada país?
+      - id: a1000000000000000000000000000004
+        question: Qual o ticket médio por forma de pagamento?
+      - id: a1000000000000000000000000000005
+        question: Em que dia da semana e horário vendemos mais?
+      - id: a1000000000000000000000000000006
+        question: Quais franquias têm o pior sentimento nas avaliações?
+  data_sources:
+    metric_views:
+      - identifier: ${catalog}.gold.sales_metrics
+        column_configs:
+          - {column_name: franchise_name, enable_format_assistance: true, enable_entity_matching: true}
+          - {column_name: franchise_city, enable_format_assistance: true, enable_entity_matching: true}
+          - {column_name: franchise_country, enable_format_assistance: true, enable_entity_matching: true}
+          - {column_name: product, enable_format_assistance: true, enable_entity_matching: true}
+          - {column_name: payment_method, enable_format_assistance: true, enable_entity_matching: true}
+          - {column_name: transaction_weekday, enable_format_assistance: true, enable_entity_matching: true}
+          - {column_name: customer_country, enable_format_assistance: true, enable_entity_matching: true}
+          - {column_name: customer_continent, enable_format_assistance: true, enable_entity_matching: true}
+    tables:
+      - identifier: ${catalog}.gold.sentiment_by_franchise
+        column_configs:
+          - {column_name: franchise_name, enable_format_assistance: true, enable_entity_matching: true}
+          - {column_name: city, enable_format_assistance: true, enable_entity_matching: true}
+          - {column_name: country, enable_format_assistance: true, enable_entity_matching: true}
+          - {column_name: latitude, exclude: true}
+          - {column_name: longitude, exclude: true}
+          - column_name: positive_ratio
+            description: >-
+              Share of positive reviews of ONE franchise. Never average it across franchises: to
+              aggregate, sum the review counts (see the measure net_sentiment_total).
+            synonyms: [percentual positivo, avaliações positivas]
+          - column_name: net_sentiment
+            description: >-
+              Net sentiment of ONE franchise, (positive - negative) / scored reviews, from -1 to 1.
+              Never average it across franchises: use the measure net_sentiment_total instead.
+            synonyms: [sentimento, satisfação, nota de sentimento]
+  instructions:
+    text_instructions:
+      - id: c1000000000000000000000000000001
+        content: |
+          ## PURPOSE
+          - Gestores de negócio da rede Bakehouse perguntam sobre vendas e satisfação dos clientes. Responda em português.
+
+          ## DISAMBIGUATION
+          - Os dados são históricos e não chegam até hoje. "Último mês", "este mês", "recentemente" e afins referem-se ao período mais recente disponível nos dados (maior transaction_date em sales_metrics, maior last_review_date em sentiment_by_franchise), nunca à data atual.
+          - "Vendas", "vender mais" e "vendemos mais" sem outra indicação significam receita (medida revenue); use unidades (units_sold) só quando o usuário falar em unidades ou quantidade.
+
+          ## Instructions you must follow when providing summaries
+          - Sempre informe o período de dados usado na resposta.
+          - Arredonde valores e razões para duas casas decimais.
+          - Os dados não informam a moeda: nunca use símbolo de moeda (R$, US$, €) nos valores.
+    example_question_sqls:
+      - id: b1000000000000000000000000000001
+        question: Quais franquias tiveram a maior receita no último mês?
+        usage_guidance: Ranking in the latest period available in the data (the data is historical).
+        sql: |
+          WITH ultimo_mes AS (
+            SELECT sales_metrics.transaction_month FROM ${catalog}.gold.sales_metrics
+            GROUP BY ALL ORDER BY sales_metrics.transaction_month DESC LIMIT 1
+          )
+          SELECT sales_metrics.franchise_name, sales_metrics.franchise_country, MEASURE(sales_metrics.revenue) AS receita
+          FROM ${catalog}.gold.sales_metrics
+          WHERE sales_metrics.transaction_month = (SELECT transaction_month FROM ultimo_mes)
+          GROUP BY ALL
+          ORDER BY receita DESC
+          LIMIT 10
+      - id: b1000000000000000000000000000002
+        question: Qual o ticket médio por forma de pagamento?
+        usage_guidance: Ratio measures come from the metric view, recomputed at the queried grain.
+        sql: |
+          SELECT sales_metrics.payment_method, MEASURE(sales_metrics.avg_ticket) AS ticket_medio,
+                 MEASURE(sales_metrics.orders) AS pedidos
+          FROM ${catalog}.gold.sales_metrics
+          GROUP BY ALL
+          ORDER BY ticket_medio DESC
+      - id: b1000000000000000000000000000003
+        question: Qual produto mais vende em cada país?
+        usage_guidance: Top-1 per group, by units sold unless the user asks for revenue.
+        sql: |
+          WITH vendas AS (
+            SELECT sales_metrics.franchise_country, sales_metrics.product, MEASURE(sales_metrics.units_sold) AS unidades
+            FROM ${catalog}.gold.sales_metrics
+            GROUP BY ALL
+          )
+          SELECT vendas.franchise_country, vendas.product, vendas.unidades
+          FROM vendas
+          QUALIFY row_number() OVER (PARTITION BY vendas.franchise_country ORDER BY vendas.unidades DESC) = 1
+          ORDER BY vendas.franchise_country
+      - id: b1000000000000000000000000000004
+        question: As franquias com pior sentimento vendem menos?
+        usage_guidance: Combine the metric view with another source by wrapping it in a CTE first.
+        sql: |
+          WITH vendas AS (
+            SELECT sales_metrics.franchise_id, MEASURE(sales_metrics.revenue) AS receita, MEASURE(sales_metrics.orders) AS pedidos
+            FROM ${catalog}.gold.sales_metrics
+            GROUP BY ALL
+          )
+          SELECT sentiment_by_franchise.franchise_name, sentiment_by_franchise.country, vendas.receita,
+                 sentiment_by_franchise.reviews, sentiment_by_franchise.net_sentiment
+          FROM ${catalog}.gold.sentiment_by_franchise
+          LEFT JOIN vendas ON sentiment_by_franchise.franchise_id = vendas.franchise_id
+          WHERE sentiment_by_franchise.reviews > 0
+          ORDER BY sentiment_by_franchise.net_sentiment ASC, sentiment_by_franchise.reviews DESC
+    sql_snippets:
+      measures:
+        - id: d1000000000000000000000000000001
+          alias: net_sentiment_total
+          display_name: Sentimento líquido (agregado)
+          synonyms: [sentimento médio, satisfação geral, sentimento por país]
+          sql: >-
+            (SUM(sentiment_by_franchise.positive_reviews) - SUM(sentiment_by_franchise.negative_reviews))
+            / NULLIF(SUM(sentiment_by_franchise.reviews) - SUM(sentiment_by_franchise.unscored_reviews), 0)
