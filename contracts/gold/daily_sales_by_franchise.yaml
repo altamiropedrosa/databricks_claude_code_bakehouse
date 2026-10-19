@@ -1,0 +1,82 @@
+# Data contract (ODCS v3) for gold.daily_sales_by_franchise. Rules: contracts/README.md.
+apiVersion: v3.0.2
+kind: DataContract
+id: bakehouse.gold.daily_sales_by_franchise
+name: daily_sales_by_franchise
+version: 1.0.0
+status: active
+domain: bakehouse
+dataProduct: bakehouse_medallion
+team:
+  - username: altamiropedrosa
+    role: owner
+description:
+  purpose: Daily sales per franchise and payment method.
+  usage: >-
+    Time series and payment mix. Measures are additive: roll up with SUM and compute the
+    average ticket as SUM(revenue) / SUM(orders).
+  limitations: Franchise attributes are NULL for sales whose franchise is unknown.
+schema:
+  - name: daily_sales_by_franchise
+    physicalName: gold.daily_sales_by_franchise
+    physicalType: materialized_view
+    description: Daily sales per franchise and payment method (additive measures)
+    dataGranularityDescription: One row per transaction_date, franchise_id and payment_method.
+    properties:
+      - name: transaction_date
+        logicalType: date
+        physicalType: DATE
+        required: true
+        description: Calendar date of the sales
+      - name: transaction_month
+        logicalType: date
+        physicalType: DATE
+        required: true
+        description: First day of the month of the sales
+      - name: franchise_id
+        logicalType: integer
+        physicalType: BIGINT
+        required: false
+        description: Franchise identifier
+      - name: franchise_name
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise name
+      - name: city
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise city
+      - name: country
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise country
+      - name: payment_method
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Payment method in lower case
+      - name: orders
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Number of sales transactions
+      - name: units_sold
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Total units sold
+      - name: revenue
+        logicalType: number
+        physicalType: DECIMAL(22,2)
+        required: true
+        description: Total revenue, sum of total_price
+slaProperties:
+  - property: frequency
+    value: 1
+    unit: d
+  - property: latency
+    value: 26
+    unit: h

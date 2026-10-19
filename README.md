@@ -109,8 +109,12 @@ exclusivamente sobre a camada gold.
 │   │   ├── silver/                     # 4 tabelas limpas
 │   │   └── gold/                       # 6 marts
 │   └── dashboards/bakehouse_sales.lvdash.json
+├── contracts/                          # Contratos de dados (ODCS v3), ver contracts/README.md
+│   ├── silver/transactions.yaml
+│   └── gold/                           # 1 contrato por mart
 ├── tests/
-│   └── test_bundle_conventions.py      # Testes offline das convenções do bundle
+│   ├── test_bundle_conventions.py      # Testes offline das convenções do bundle
+│   └── test_data_contracts.py          # Testes offline: SQL x contrato e regras de versão
 └── .github/workflows/databricks.yml    # Pipeline de CI/CD
 ```
 
@@ -161,6 +165,10 @@ databricks bundle run bakehouse_medallion_job
 Os testes em `tests/test_bundle_conventions.py` verificam, sem conexão com o Databricks, as convenções
 descritas abaixo: catálogo nunca fixo no código, cada SQL criando a tabela da própria camada, só a bronze
 lendo a origem, configuração do pipeline vinda do bundle e widgets do dashboard ligados a campos existentes.
+
+Os testes em `tests/test_data_contracts.py` verificam os [contratos de dados](contracts/README.md): toda tabela
+gold tem contrato, o SQL declara exatamente as colunas, tipos, `NOT NULL`, comentários e expectations do
+contrato, e mudanças incompatíveis exigem versão MAJOR em relação ao `origin/master`.
 
 ## CI/CD
 
@@ -216,6 +224,8 @@ O service principal passa a ser dono dos schemas que cria, sem precisar de outra
 - **SQL sem `USE CATALOG`/`USE SCHEMA`:** todas as tabelas são totalmente qualificadas.
 - **Fonte somente leitura:** apenas a bronze lê `samples.bakehouse`.
 - **Dashboard** usa nomes de tabela sem catálogo/schema; ambos são injetados pelo bundle.
+- **Contrato antes do SQL:** toda tabela gold tem um contrato em `contracts/`, e o SQL declara o schema
+  explícito do contrato. Mudou a tabela, mudou o contrato (com versão).
 
 Essas regras são verificadas automaticamente pelos testes.
 

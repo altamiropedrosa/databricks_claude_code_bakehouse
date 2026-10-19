@@ -1,0 +1,70 @@
+# Data contract (ODCS v3) for gold.sales_by_country. Rules: contracts/README.md.
+apiVersion: v3.0.2
+kind: DataContract
+id: bakehouse.gold.sales_by_country
+name: sales_by_country
+version: 1.0.0
+status: active
+domain: bakehouse
+dataProduct: bakehouse_medallion
+team:
+  - username: altamiropedrosa
+    role: owner
+description:
+  purpose: Sales per country where the sale happened (franchise country).
+  usage: Country comparison and revenue share in the sales dashboard.
+  limitations: Sales of unknown franchises are grouped under a NULL country.
+schema:
+  - name: sales_by_country
+    physicalName: gold.sales_by_country
+    physicalType: materialized_view
+    description: Sales per franchise country with revenue share
+    dataGranularityDescription: One row per franchise country.
+    properties:
+      - name: country
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise country
+      - name: active_franchises
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Distinct franchises with sales in the country
+      - name: orders
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Number of sales transactions
+      - name: units_sold
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Total units sold
+      - name: revenue
+        logicalType: number
+        physicalType: DECIMAL(22,2)
+        required: true
+        description: Total revenue, sum of total_price
+      - name: avg_ticket
+        logicalType: number
+        physicalType: DECIMAL(12,2)
+        required: true
+        description: Average revenue per order
+      - name: unique_customers
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Distinct customers who bought in the country
+      - name: revenue_share
+        logicalType: number
+        physicalType: DECIMAL(7,4)
+        required: true
+        description: Share of the total revenue, between 0 and 1
+slaProperties:
+  - property: frequency
+    value: 1
+    unit: d
+  - property: latency
+    value: 26
+    unit: h

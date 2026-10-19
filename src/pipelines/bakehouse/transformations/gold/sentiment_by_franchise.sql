@@ -1,7 +1,23 @@
 -- Gold: review sentiment per franchise.
 -- net_sentiment = (positive - negative) / scored reviews, in [-1, 1].
 -- Franchises without reviews are kept with zero counts and NULL ratios.
-CREATE OR REFRESH MATERIALIZED VIEW ${medallion_catalog}.${gold_schema}.sentiment_by_franchise
+CREATE OR REFRESH MATERIALIZED VIEW ${medallion_catalog}.${gold_schema}.sentiment_by_franchise (
+  franchise_id BIGINT NOT NULL COMMENT 'Franchise identifier',
+  franchise_name STRING COMMENT 'Franchise name',
+  city STRING COMMENT 'Franchise city',
+  country STRING COMMENT 'Franchise country',
+  latitude DOUBLE COMMENT 'Franchise latitude',
+  longitude DOUBLE COMMENT 'Franchise longitude',
+  reviews BIGINT NOT NULL COMMENT 'Number of reviews',
+  positive_reviews BIGINT NOT NULL COMMENT 'Reviews scored as positive',
+  negative_reviews BIGINT NOT NULL COMMENT 'Reviews scored as negative',
+  neutral_reviews BIGINT NOT NULL COMMENT 'Reviews scored as neutral',
+  mixed_reviews BIGINT NOT NULL COMMENT 'Reviews scored as mixed',
+  unscored_reviews BIGINT NOT NULL COMMENT 'Reviews without a sentiment score',
+  positive_ratio DECIMAL(5, 4) COMMENT 'Positive share of the scored reviews, between 0 and 1',
+  net_sentiment DECIMAL(5, 4) COMMENT 'Positive minus negative share of the scored reviews, between -1 and 1',
+  last_review_date DATE COMMENT 'Date of the most recent review'
+)
 COMMENT 'Customer review sentiment counts and ratios per franchise'
 AS WITH reviews AS (
   SELECT

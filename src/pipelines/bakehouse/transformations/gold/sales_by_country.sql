@@ -1,5 +1,14 @@
 -- Gold: sales per country where the sale happened (franchise country).
-CREATE OR REFRESH MATERIALIZED VIEW ${medallion_catalog}.${gold_schema}.sales_by_country
+CREATE OR REFRESH MATERIALIZED VIEW ${medallion_catalog}.${gold_schema}.sales_by_country (
+  country STRING COMMENT 'Franchise country',
+  active_franchises BIGINT NOT NULL COMMENT 'Distinct franchises with sales in the country',
+  orders BIGINT NOT NULL COMMENT 'Number of sales transactions',
+  units_sold BIGINT NOT NULL COMMENT 'Total units sold',
+  revenue DECIMAL(22, 2) NOT NULL COMMENT 'Total revenue, sum of total_price',
+  avg_ticket DECIMAL(12, 2) NOT NULL COMMENT 'Average revenue per order',
+  unique_customers BIGINT NOT NULL COMMENT 'Distinct customers who bought in the country',
+  revenue_share DECIMAL(7, 4) NOT NULL COMMENT 'Share of the total revenue, between 0 and 1'
+)
 COMMENT 'Sales per franchise country with revenue share'
 AS SELECT
   franchise_country AS country,

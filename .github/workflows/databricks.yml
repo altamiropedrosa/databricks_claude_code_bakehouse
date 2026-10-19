@@ -23,6 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Historico completo: tests/test_data_contracts.py compara os contratos com origin/master
+          # para exigir bump de versao (MAJOR em mudanca incompativel).
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true

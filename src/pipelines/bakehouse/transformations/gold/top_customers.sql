@@ -1,6 +1,20 @@
 -- Gold: customer ranking by revenue. One row per customer with purchases;
 -- filter on customer_rank for a top-N view.
-CREATE OR REFRESH MATERIALIZED VIEW ${medallion_catalog}.${gold_schema}.top_customers
+CREATE OR REFRESH MATERIALIZED VIEW ${medallion_catalog}.${gold_schema}.top_customers (
+  customer_rank INT NOT NULL COMMENT 'Rank by revenue, 1 is the highest, ties broken by customer_id',
+  customer_id BIGINT COMMENT 'Customer identifier',
+  customer_name STRING COMMENT 'Customer full name (personal data)',
+  country STRING COMMENT 'Customer country',
+  continent STRING COMMENT 'Customer continent',
+  orders BIGINT NOT NULL COMMENT 'Number of purchases',
+  units_sold BIGINT NOT NULL COMMENT 'Total units bought',
+  revenue DECIMAL(22, 2) NOT NULL COMMENT 'Total revenue from the customer, sum of total_price',
+  avg_ticket DECIMAL(12, 2) NOT NULL COMMENT 'Average revenue per purchase',
+  favorite_product STRING COMMENT 'Product with the most units bought, ties broken alphabetically',
+  franchises_visited BIGINT NOT NULL COMMENT 'Distinct franchises where the customer bought',
+  first_purchase_date DATE NOT NULL COMMENT 'Date of the first purchase',
+  last_purchase_date DATE NOT NULL COMMENT 'Date of the most recent purchase'
+)
 COMMENT 'Customers ranked by revenue, with favorite product'
 AS WITH product_units AS (
   SELECT
