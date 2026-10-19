@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(databricks bundle destroy:*)",
+      "Bash(databricks bundle deploy -t prod:*)",
+      "Bash(databricks bundle deploy --target prod:*)",
+      "Bash(databricks bundle deploy --target=prod:*)",
+      "Bash(databricks catalogs delete:*)",
+      "Bash(databricks schemas delete:*)",
+      "Bash(databricks tables delete:*)",
+      "Bash(databricks volumes delete:*)",
+      "Bash(databricks pipelines delete:*)",
+      "Bash(databricks jobs delete:*)",
+      "Bash(databricks fs rm:*)",
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)",
+      "Bash(sudo:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|mcp__databricks__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/block_destructive.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
