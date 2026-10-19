@@ -1,0 +1,11 @@
+# AI/BI (Lakeview) dashboard over the gold marts. Dataset queries in the JSON use
+# bare table names; catalog and schema are supplied here, so the same file works
+# against every target.
+resources:
+  dashboards:
+    bakehouse_sales:
+      display_name: "[${bundle.target}] Bakehouse - Vendas e Satisfacao"
+      file_path: ../src/dashboards/bakehouse_sales.lvdash.json
+      warehouse_id: ${var.warehouse_id}
+      dataset_catalog: ${var.catalog}
+      dataset_schema: ${resources.schemas.gold.name}

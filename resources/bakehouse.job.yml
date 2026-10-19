@@ -1,0 +1,15 @@
+# Orchestrates the medallion pipeline. The schedule is paused in dev through the
+# target presets (trigger_pause_status) and active in prod.
+resources:
+  jobs:
+    bakehouse_medallion_job:
+      name: "[${bundle.target}] bakehouse_medallion_job"
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"
+        timezone_id: America/Sao_Paulo
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: refresh_medallion_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.bakehouse_medallion.id}
+            full_refresh: false

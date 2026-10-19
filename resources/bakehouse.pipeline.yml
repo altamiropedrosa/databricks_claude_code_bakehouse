@@ -1,0 +1,21 @@
+# Single serverless Lakeflow Declarative Pipeline for the three medallion layers.
+# Every dataset in the SQL is fully qualified as
+# ${medallion_catalog}.${<layer>_schema}.<table>, with the values injected below.
+resources:
+  pipelines:
+    bakehouse_medallion:
+      name: "[${bundle.target}] bakehouse_medallion"
+      catalog: ${var.catalog}
+      schema: ${resources.schemas.bronze.name}
+      serverless: true
+      continuous: false
+      channel: CURRENT
+      root_path: ../src/pipelines/bakehouse
+      libraries:
+        - glob:
+            include: ../src/pipelines/bakehouse/transformations/**
+      configuration:
+        medallion_catalog: ${var.catalog}
+        bronze_schema: ${resources.schemas.bronze.name}
+        silver_schema: ${resources.schemas.silver.name}
+        gold_schema: ${resources.schemas.gold.name}
