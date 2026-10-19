@@ -1,7 +1,8 @@
 # Orchestrates the medallion pipeline. The schedule is paused in dev through the
 # target presets (trigger_pause_status) and active in prod.
-# After each refresh, the published tables are checked against contracts/ (see contracts/README.md)
-# and the metric views of semantic/ are republished (see semantic/README.md).
+# After each refresh, the published tables are checked against contracts/ (see contracts/README.md),
+# the metric views of semantic/ are republished (see semantic/README.md) and the Genie spaces of
+# genie/ are created or updated on top of them.
 resources:
   jobs:
     bakehouse_medallion_job:
@@ -11,11 +12,12 @@ resources:
         timezone_id: America/Sao_Paulo
       max_concurrent_runs: 1
       environments:
-        - environment_key: contracts
+        - environment_key: python
           spec:
             environment_version: "4"
             dependencies:
               - pyyaml==6.0.3
+              - databricks-sdk==0.154.0
       tasks:
         - task_key: refresh_medallion_pipeline
           pipeline_task:
@@ -24,7 +26,7 @@ resources:
         - task_key: enforce_data_contracts
           depends_on:
             - task_key: refresh_medallion_pipeline
-          environment_key: contracts
+          environment_key: python
           spark_python_task:
             python_file: ../src/jobs/enforce_data_contracts.py
             parameters:
@@ -36,7 +38,7 @@ resources:
         - task_key: publish_metric_views
           depends_on:
             - task_key: enforce_data_contracts
-          environment_key: contracts
+          environment_key: python
           spark_python_task:
             python_file: ../src/jobs/publish_metric_views.py
             parameters:
@@ -44,3 +46,20 @@ resources:
               - ${var.catalog}
               - --semantic-dir
               - ${workspace.file_path}/semantic
+        - task_key: publish_genie_space
+          depends_on:
+            - task_key: publish_metric_views
+          environment_key: python
+          spark_python_task:
+            python_file: ../src/jobs/publish_genie_space.py
+            parameters:
+              - --catalog
+              - ${var.catalog}
+              - --target
+              - ${bundle.target}
+              - --warehouse-id
+              - ${var.warehouse_id}
+              - --parent-path
+              - ${workspace.root_path}/genie
+              - --genie-dir
+              - ${workspace.file_path}/genie
