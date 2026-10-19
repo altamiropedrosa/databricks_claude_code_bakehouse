@@ -33,4 +33,4 @@ packages = ["src"]
 [tool.ruff]
 line-length = 120
 # Vendored agent skills, not project code.
-extend-exclude = [".claude", ".ai-dev-kit"]
+extend-exclude = [".claude", ".ai-dev-kit", "scripts/*.ipynb"]
