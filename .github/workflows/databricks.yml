@@ -51,6 +51,17 @@ jobs:
       - uses: databricks/setup-cli@v1.21.0
         with:
           version: 1.21.0   # mesma versao do CLI local: o CI nao deve te surpreender
+      # TEMPORARIO: diagnostico dos secrets sem expor valores. Remover apos resolver o invalid_client.
+      - name: Diagnostico dos secrets (temporario)
+        run: |
+          id="$DATABRICKS_CLIENT_ID"; sec="$DATABRICKS_CLIENT_SECRET"
+          echo "client_id: tamanho=${#id}"
+          [[ "$id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] && echo "client_id: formato UUID OK" || echo "client_id: NAO e UUID"
+          [[ "$id" == "d30739bf-0528-4517-95cf-d8af7bacca93" ]] && echo "client_id: igual ao application ID do service_ci_cd" || echo "client_id: DIFERENTE do application ID do service_ci_cd"
+          echo "secret: tamanho=${#sec}"
+          [[ "$sec" == dose* ]] && echo "secret: comeca com 'dose'" || echo "secret: NAO comeca com 'dose'"
+          [[ "$sec" =~ [[:space:]\"\'] ]] && echo "secret: contem espaco/quebra de linha/aspas" || echo "secret: sem espaco/quebra de linha/aspas"
+          [[ "$sec" =~ ^[0-9a-f]{64}$ ]] && echo "secret: parece o Secret ID/hash (64 hex), nao o secret" || true
       - run: databricks bundle validate --strict -t prod
 
   deploy:
