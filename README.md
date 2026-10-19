@@ -109,14 +109,18 @@ exclusivamente sobre a camada gold.
 │   │   ├── silver/                     # 4 tabelas limpas
 │   │   └── gold/                       # 6 marts
 │   ├── dashboards/bakehouse_sales.lvdash.json
-│   └── jobs/enforce_data_contracts.py  # Confere tabelas publicadas x contratos (tarefa do job)
+│   └── jobs/
+│       ├── enforce_data_contracts.py   # Confere tabelas publicadas x contratos (tarefa do job)
+│       └── publish_metric_views.py     # Publica a camada semântica (tarefa do job)
+├── semantic/gold/sales_metrics.yaml    # Metric view de vendas, ver semantic/README.md
 ├── contracts/                          # Contratos de dados (ODCS v3), ver contracts/README.md
 │   ├── silver/transactions.yaml
 │   └── gold/                           # 1 contrato por mart
 ├── tests/
 │   ├── test_bundle_conventions.py      # Testes offline das convenções do bundle
 │   ├── test_data_contracts.py          # Testes offline: SQL x contrato e regras de versão
-│   └── test_enforce_data_contracts.py  # Testes offline da verificação em execução
+│   ├── test_enforce_data_contracts.py  # Testes offline da verificação em execução
+│   └── test_semantic_layer.py          # Testes offline da camada semântica x contratos
 └── .github/workflows/databricks.yml    # Pipeline de CI/CD
 ```
 
@@ -175,6 +179,8 @@ contrato, e mudanças incompatíveis exigem versão MAJOR em relação ao `origi
 Em execução, o job `bakehouse_medallion_job` roda a tarefa `enforce_data_contracts` depois do pipeline: ela
 confere o schema publicado no Unity Catalog, a unicidade da chave primária e o prazo de atualização de cada
 contrato, aplica as tags de contrato e de dado pessoal, e falha a execução se algum contrato for violado.
+Em seguida, a tarefa `publish_metric_views` republica a [camada semântica](semantic/README.md)
+(`gold.sales_metrics`), que o dashboard usa para os dados de vendas.
 
 ## CI/CD
 
@@ -232,6 +238,8 @@ O service principal passa a ser dono dos schemas que cria, sem precisar de outra
 - **Dashboard** usa nomes de tabela sem catálogo/schema; ambos são injetados pelo bundle.
 - **Contrato antes do SQL:** toda tabela gold tem um contrato em `contracts/`, e o SQL declara o schema
   explícito do contrato. Mudou a tabela, mudou o contrato (com versão).
+- **Métrica tem um só dono:** receita, pedidos, ticket médio e afins vêm de `gold.sales_metrics`
+  (`MEASURE()`), e não são recalculados em cada consulta.
 
 Essas regras são verificadas automaticamente pelos testes.
 

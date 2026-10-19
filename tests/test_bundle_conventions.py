@@ -105,6 +105,7 @@ def test_schemas_are_named_after_layers():
 @pytest.mark.parametrize("path", DASHBOARD_FILES, ids=lambda p: p.name)
 def test_dashboard_reads_bare_gold_tables(path):
     gold_tables = {p.stem for p in (TRANSFORMATIONS / "gold").glob("*.sql")}
+    gold_tables |= {p.stem for p in (ROOT / "semantic" / "gold").glob("*.yaml")}  # metric views
     for dataset in json.loads(path.read_text(encoding="utf-8"))["datasets"]:
         query = "".join(dataset["queryLines"])
         for table in re.findall(r"\b(?:FROM|JOIN)\s+([\w.`]+)", query, re.IGNORECASE):

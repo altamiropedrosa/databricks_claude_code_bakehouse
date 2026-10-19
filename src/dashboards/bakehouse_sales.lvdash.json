@@ -4,9 +4,11 @@
       "name": "ds_daily",
       "displayName": "Vendas diarias por franquia",
       "queryLines": [
-        "SELECT transaction_date, franchise_id, franchise_name, city, country, payment_method, ",
-        "orders, units_sold, revenue ",
-        "FROM daily_sales_by_franchise"
+        "SELECT transaction_date, franchise_id, franchise_name, franchise_city AS city, ",
+        "franchise_country AS country, payment_method, ",
+        "MEASURE(orders) AS orders, MEASURE(units_sold) AS units_sold, MEASURE(revenue) AS revenue ",
+        "FROM sales_metrics ",
+        "GROUP BY ALL"
       ],
       "columns": [
         {
@@ -35,8 +37,10 @@
       "name": "ds_product",
       "displayName": "Vendas por produto",
       "queryLines": [
-        "SELECT product, transaction_date, country, orders, units_sold, revenue ",
-        "FROM sales_by_product"
+        "SELECT product, transaction_date, franchise_country AS country, ",
+        "MEASURE(orders) AS orders, MEASURE(units_sold) AS units_sold, MEASURE(revenue) AS revenue ",
+        "FROM sales_metrics ",
+        "GROUP BY ALL"
       ]
     },
     {
