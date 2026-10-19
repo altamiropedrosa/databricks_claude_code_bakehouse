@@ -9,6 +9,7 @@ import pathlib
 import re
 
 import pytest
+import yaml
 
 ROOT = pathlib.Path(__file__).parent.parent
 RESOURCES = ROOT / "resources"
@@ -133,3 +134,20 @@ def test_dashboard_widgets_bind_existing_fields(path):
             if "coordinates" in encodings:
                 used |= {encodings["coordinates"][axis]["fieldName"] for axis in ("latitude", "longitude")}
             assert used <= names, (widget["name"], used - names)
+
+
+def test_prod_deploy_is_gated_by_ci_integration():
+    workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "databricks.yml").read_text(encoding="utf-8"))
+    jobs = workflow["jobs"]
+    commands = [step.get("run", "") for step in jobs["integration"]["steps"]]
+    assert commands[-2:] == ["databricks bundle deploy -t ci", "databricks bundle run bakehouse_medallion_job -t ci"]
+    assert jobs["integration"]["concurrency"]["cancel-in-progress"] is False, "never cancel a deploy mid-way"
+    assert {"validate", "integration"} <= set(jobs["deploy"]["needs"]), "prod deploy must wait for the ci run"
+
+
+def test_ci_target_is_isolated_from_dev_and_prod():
+    targets = yaml.safe_load((ROOT / "databricks.yml").read_text(encoding="utf-8"))["targets"]
+    catalogs = [target["variables"]["catalog"] for target in targets.values()]
+    assert len(catalogs) == len(set(catalogs)), "each target needs its own catalog"
+    assert targets["ci"]["run_as"] == targets["prod"]["run_as"], "ci runs as the same identity as prod"
+    assert targets["ci"]["presets"]["trigger_pause_status"] == "PAUSED"

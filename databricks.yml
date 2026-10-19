@@ -41,6 +41,26 @@ targets:
         dev: ${workspace.current_user.short_name}
     variables:
       catalog: bakehouse_dev
+  ci:
+    # Integration target, deployed only by CI (.github/workflows/databricks.yml): every PR and
+    # every push to master deploys here and runs the whole job (pipeline, contract checks,
+    # metric views) before prod can be deployed. Same shape as prod (service principal, state
+    # pinned to its home) but isolated in its own catalog, with the schedule paused.
+    presets:
+      pipelines_development: true
+      trigger_pause_status: PAUSED
+    workspace:
+      host: https://dbc-02964a61-2c9c.cloud.databricks.com
+      root_path: /Workspace/Users/${var.service_principal}/.bundle/${bundle.name}/${bundle.target}
+    run_as:
+      service_principal_name: ${var.service_principal}
+    variables:
+      catalog: bakehouse_ci
+    permissions:
+      - user_name: altamiro.pedrosa@gmail.com
+        level: CAN_MANAGE
+      - service_principal_name: ${var.service_principal}
+        level: CAN_MANAGE
   prod:
     # Prod is deployed by CI (.github/workflows/databricks.yml) as the service principal.
     # root_path is pinned to the service principal's home so there is a single copy of
