@@ -128,14 +128,17 @@ exclusivamente sobre a camada gold.
 
 O **catálogo é a única coisa que muda entre ambientes**. Os nomes dos schemas são sempre `bronze`, `silver` e `gold`.
 
-| | `dev` (padrão) | `prod` |
-|---|---|---|
-| Catálogo | `bakehouse_dev` | `bakehouse_prod` |
-| Quem faz deploy | Desenvolvedor, pela CLI | GitHub Actions, como service principal |
-| Executa como | Usuário que fez o deploy | Service principal `service_ci_cd` |
-| Agendamento do job | Pausado | Ativo (06:00, `America/Sao_Paulo`) |
-| Pipeline | Modo desenvolvimento | Modo produção |
-| Prefixo dos recursos | `[dev]` | `[prod]` |
+| | `dev` (padrão) | `ci` | `prod` |
+|---|---|---|---|
+| Catálogo | `bakehouse_dev` | `bakehouse_ci` | `bakehouse_prod` |
+| Quem faz deploy | Desenvolvedor, pela CLI | GitHub Actions, como service principal | GitHub Actions, como service principal |
+| Executa como | Usuário que fez o deploy | Service principal `service_ci_cd` | Service principal `service_ci_cd` |
+| Agendamento do job | Pausado | Pausado (o CI dispara a execução) | Ativo (06:00, `America/Sao_Paulo`) |
+| Pipeline | Modo desenvolvimento | Modo desenvolvimento | Modo produção |
+| Prefixo dos recursos | `[dev]` | `[ci]` | `[prod]` |
+
+O target `ci` é o **gate de integração**: todo PR e todo push na `master` publicam o bundle nele e rodam o
+job completo (pipeline, verificação dos contratos e metric views) antes de qualquer deploy em produção.
 
 > **Atenção:** o target `dev` não usa `mode: development`, para manter os schemas sem o prefixo
 > `dev_<usuario>_`. Por isso, **todos os desenvolvedores compartilham os mesmos schemas em `bakehouse_dev`**.
@@ -145,7 +148,7 @@ O **catálogo é a única coisa que muda entre ambientes**. Os nomes dos schemas
 - [Databricks CLI](https://docs.databricks.com/dev-tools/cli/install) **v1.21.0** (a mesma versão usada no CI)
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) e Python **3.12**
 - Workspace Databricks com Unity Catalog e computação serverless
-- Catálogos `bakehouse_dev` e `bakehouse_prod` já criados (o bundle cria os schemas, não os catálogos)
+- Catálogos `bakehouse_dev`, `bakehouse_ci` e `bakehouse_prod` já criados (o bundle cria os schemas, não os catálogos)
 - SQL warehouse chamado **`Serverless Starter Warehouse`** (resolvido por nome no bundle)
 - AI Functions disponíveis no workspace (para `ai_analyze_sentiment`)
 
@@ -188,18 +191,21 @@ O workflow `.github/workflows/databricks.yml` implementa o fluxo:
 
 ```mermaid
 flowchart LR
-    pr["Pull request"] --> test["lint + pytest"] --> validate["bundle validate<br/>(prod)"]
-    merge["Merge na master"] --> test2["lint + pytest"] --> validate2["bundle validate<br/>(prod)"] --> approve{{"Aprovação manual<br/>environment prod"}} --> deploy["bundle deploy<br/>(prod)"]
+    pr["Pull request"] --> test["lint + pytest"] --> validate["bundle validate<br/>(prod)"] --> ci["bundle run<br/>(ci)"]
+    merge["Merge na master"] --> test2["lint + pytest"] --> validate2["bundle validate<br/>(prod)"] --> ci2["bundle run<br/>(ci)"] --> approve{{"Aprovação manual<br/>environment prod"}} --> deploy["bundle deploy<br/>(prod)"]
 ```
 
 | Job | Quando roda | Credenciais |
 |---|---|---|
-| `lint + pytest` | Todo PR e push na `master` | Não usa |
-| `bundle validate (prod)` | PR do próprio repositório e push na `master` | Service principal |
-| `bundle deploy (prod)` | Somente push na `master`, **após aprovação** no environment `prod` | Service principal |
+| `lint + pytest` | Todo PR, push na `master` e execução manual | Não usa |
+| `bundle validate (prod)` | PR do próprio repositório, push na `master` e execução manual | Service principal |
+| `bundle run (ci)` | Igual ao validate: publica no target `ci` e roda o job inteiro (pipeline, contratos, metric views) | Service principal |
+| `bundle deploy (prod)` | Somente push na `master`, **após o `bundle run (ci)` passar e após aprovação** no environment `prod` | Service principal |
 
 - PRs vindos de **fork** só executam lint e testes, pois não recebem secrets.
-- Deploys em produção rodam **um por vez** e nunca são cancelados no meio, para não deixar o state travado.
+- Deploys em produção e no `ci` rodam **um por vez** e nunca são cancelados no meio, para não deixar o state travado.
+- O workflow também pode ser disparado manualmente (*Actions → Run workflow*) em qualquer branch, para rodar o
+  gate de integração. A execução manual nunca faz deploy em prod.
 
 ## Configuração do ambiente de produção
 
@@ -214,6 +220,8 @@ Configuração necessária uma única vez para o CI conseguir publicar em produ�
 
 ```sql
 GRANT USE CATALOG, CREATE SCHEMA ON CATALOG bakehouse_prod
+  TO `<application-id-do-service-principal>`;
+GRANT USE CATALOG, CREATE SCHEMA ON CATALOG bakehouse_ci
   TO `<application-id-do-service-principal>`;
 ```
 
