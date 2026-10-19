@@ -1,21 +1,30 @@
-"""This file configures pytest, initializes Databricks Connect, and provides fixtures for Spark and loading test data."""
+"""This file configures pytest, initializes Databricks Connect, and provides fixtures for Spark and loading test data.
 
-import os, sys, pathlib
+Set DATABRICKS_SKIP_CONNECT=1 to run offline (e.g. in CI without credentials): Databricks Connect is
+not initialized and tests that need the `spark` fixture are skipped.
+"""
+
+import csv
+import json
+import os
+import pathlib
+import sys
 from contextlib import contextmanager
 
-
 try:
+    import pytest
     from databricks.connect import DatabricksSession
     from databricks.sdk import WorkspaceClient
     from pyspark.sql import SparkSession
-    import pytest
-    import json
-    import csv
-    import os
 except ImportError:
     raise ImportError(
         "Test dependencies not found.\n\nRun tests using 'uv run pytest'. See http://docs.astral.sh/uv to learn more about uv."
     )
+
+
+def _skip_connect() -> bool:
+    """Whether Databricks Connect is disabled for this run (offline mode)."""
+    return os.environ.get("DATABRICKS_SKIP_CONNECT", "").lower() in ("1", "true", "yes")
 
 
 @pytest.fixture()
@@ -27,6 +36,8 @@ def spark() -> SparkSession:
             df = spark.createDataFrame([(1,)], ["x"])
             assert df.count() == 1
     """
+    if _skip_connect():
+        pytest.skip("DATABRICKS_SKIP_CONNECT is set: no Spark session in offline mode")
     return DatabricksSession.builder.getOrCreate()
 
 
@@ -82,6 +93,9 @@ def _allow_stderr_output(config: pytest.Config):
 
 def pytest_configure(config: pytest.Config):
     """Configure pytest session."""
+    if _skip_connect():
+        return
+
     with _allow_stderr_output(config):
         _enable_fallback_compute()
 

@@ -1,0 +1,18 @@
+# One Unity Catalog schema per medallion layer.
+# These resources are the single source of truth for the schema names: the pipeline
+# reads them through ${resources.schemas.<layer>.name}. The catalog always comes
+# from ${var.catalog}, which is set per target in databricks.yml.
+resources:
+  schemas:
+    bronze:
+      catalog_name: ${var.catalog}
+      name: bronze
+      comment: Bakehouse - bronze layer (raw ingestion from samples.bakehouse)
+    silver:
+      catalog_name: ${var.catalog}
+      name: silver
+      comment: Bakehouse - silver layer (cleaned and conformed data)
+    gold:
+      catalog_name: ${var.catalog}
+      name: gold
+      comment: Bakehouse - gold layer (BI-ready marts)
