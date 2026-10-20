@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "bakehouse": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--quiet", "python", "src/mcp_server/server.py"],
+      "env": {
+        "BAKEHOUSE_TARGET": "dev",
+        "PYTHONDONTWRITEBYTECODE": "1"
+      }
+    }
+  }
+}

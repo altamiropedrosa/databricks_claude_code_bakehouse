@@ -54,6 +54,7 @@ Todos os testes rodam **offline**, sem conexão com o Databricks, no CI e na má
 | `tests/test_enforce_data_contracts.py` | A verificação em execução (`src/jobs/enforce_data_contracts.py`) |
 | `tests/test_semantic_layer.py` | A camada semântica: só usa colunas do contrato da fonte, nunca colunas de dado pessoal |
 | `tests/test_genie_space.py` | A configuração versionada do Genie space |
+| `tests/test_mcp_server.py` | O [servidor MCP](mcp.md) ([spec 002](../specs/002-servidor-mcp.md)): só um `SELECT` por chamada, listas de permissão, parâmetros em vez de valores no texto, catálogo do target, nenhum dado pessoal e guardrail ativo |
 | `tests/test_product_opinions.py` | Os critérios da [spec 001](../specs/001-opinioes-por-produto.md): listas fechadas iguais na extração, nas expectations e nos contratos, e extração uma única vez por avaliação |
 
 ## Estrutura do repositório
@@ -72,6 +73,7 @@ Todos os testes rodam **offline**, sem conexão com o Databricks, no CI e na má
 │   │   ├── silver/                     # 5 tabelas limpas
 │   │   └── gold/                       # 7 marts
 │   ├── dashboards/bakehouse_sales.lvdash.json
+│   ├── mcp_server/                     # Servidor MCP bakehouse, ver docs/mcp.md
 │   └── jobs/
 │       ├── enforce_data_contracts.py   # Confere tabelas publicadas x contratos (tarefa do job)
 │       ├── publish_metric_views.py     # Publica a camada semântica (tarefa do job)
@@ -85,6 +87,7 @@ Todos os testes rodam **offline**, sem conexão com o Databricks, no CI e na má
 ├── docs/                               # Esta documentação
 ├── .claude/                            # Guardrails do agente de IA (permissões e hook)
 ├── AGENTS.md                           # Instruções para agentes de IA
+├── .mcp.json                           # Registro do servidor MCP no Claude Code
 └── .github/workflows/databricks.yml    # Pipeline de CI/CD
 ```
 

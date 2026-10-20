@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Status** | Aprovada |
+| **Status** | Entregue |
 | **Autor** | Altamiro Pedrosa |
 | **Data** | 20/10/2026 (proposta e aprovação, PR #22) |
-| **Implementação** | A definir, depois da aprovação |
+| **Implementação** | PR #23. O servidor roda na máquina de quem usa o repositório, então é entregue com o merge |
 
 ## 1. Problema
 
@@ -109,7 +109,8 @@ acessar o Databricks.
 ## 8. Decisões técnicas propostas
 
 - **SDK oficial do MCP para Python (`mcp`, com FastMCP)**, transporte stdio: é o padrão para servidores
-  locais e funciona com qualquer cliente MCP, não só com o Claude Code.
+  locais e funciona com qualquer cliente MCP, não só com o Claude Code. *Na implementação (PR #23), o SDK
+  instalado foi o 2.x, em que o `FastMCP` passou a se chamar `MCPServer`; a decisão não muda.*
 - **Statement Execution API do `databricks-sdk`** no warehouse que o bundle já usa (*Serverless Starter
   Warehouse*, resolvido por nome): não exige cluster nem Databricks Connect.
 - **Listas de permissão lidas dos arquivos governados** (`semantic/` e `contracts/`): uma medida nova na metric
@@ -140,4 +141,36 @@ acessar o Databricks.
 
 ## 11. Resultado
 
-*Preenchido depois da implementação.*
+Medido em 20/10/2026 com o target `dev`, a partir do Claude Code 2.1.304 na máquina do autor.
+
+| Nº | Resultado | Situação |
+|---|---|---|
+| CA1 | `claude mcp list`: `bakehouse` conectado. A sessão do CA8 recebeu as 4 ferramentas (`mcp__bakehouse__query_sales_metrics`, `get_product_opinions`, `get_franchise_sentiment`, `describe_data_contract`) | ✅ |
+| CA2 | Receita total (66.471,00) e receita e ticket médio dos 9 países idênticos aos da metric view consultada direto | ✅ |
+| CA3 | As 9 linhas de críticas da Tokyo Treats idênticas às da gold consultada direto | ✅ |
+| CA4 | Testes offline: medidas, dimensões e filtros fora das listas e 5 tentativas de injeção rejeitados antes de qualquer consulta | ✅ |
+| CA5 | Testes offline: um único `SELECT`, catálogo do target e filtros como parâmetros em todas as consultas | ✅ |
+| CA6 | Testes offline: `customer_name` e `card_last4`, lidos dos contratos, nunca selecionáveis | ✅ |
+| CA7 | Teste offline: o matcher do hook cobre `mcp__bakehouse__*` | ✅ |
+| CA8 | Sessão real, sem shell, arquivos nem web, só com as ferramentas do servidor (abaixo) | ✅ |
+| CA9 | CI do PR #23 verde: lint, 213 testes offline (com o SDK `mcp` instalado por `uv sync --dev`) e execução completa no target `ci` | ✅ |
+
+**Sessão do CA8.** `claude -p` com apenas as 4 ferramentas permitidas e shell, leitura de arquivos e web
+bloqueados. Pergunta: *"Por que a Tokyo Treats é mal avaliada e quanto ela faturou?"*. O agente chamou, sem
+escrever SQL:
+
+1. `get_franchise_sentiment(order="worst", limit=10)`
+2. `get_product_opinions(franchise_name="Tokyo Treats")`
+3. `query_sales_metrics(measures=["revenue", "orders", "avg_ticket"], franchise_name="Tokyo Treats")`
+
+Resposta, resumida: a Tokyo Treats tem o pior sentimento da rede (-0,50; 3 de 6 avaliações negativas e nenhuma
+positiva). As críticas são de sabor, principalmente ao Orchard Oasis, e de textura (Pearly Pies), e ela faturou
+879,00 em 51 pedidos (ticket médio de 17,24). O agente também avisou que os dados vinham de `bakehouse_dev`, que
+a moeda não é informada e que a amostra de 6 avaliações é pequena.
+
+**Observações:**
+- Ao aprovar o servidor no Claude Code, a escolha ficou registrada como desativada em
+  `.claude/settings.local.json` e foi corrigida para habilitada. A aprovação é por máquina e fica fora do Git.
+- Um `import` manual do `server.py` como módulo gerou `__pycache__` em `src/`, o que quebrava o teste de catálogo
+  fixo. O teste passou a ignorar bytecode; o uso pelo `.mcp.json` (script com `PYTHONDONTWRITEBYTECODE`) não gera
+  esses arquivos.
