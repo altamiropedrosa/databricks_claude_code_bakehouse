@@ -1,10 +1,13 @@
-# Genie space "Bakehouse - Vendas e Satisfação": natural language questions for business managers.
+# Genie space "Bakehouse Lakehouse - Vendas e Satisfação": natural language questions for business managers.
 # Published by src/jobs/publish_genie_space.py as "[<target>] <title>". `space` is the Genie
 # serialized_space (version 2) written as YAML: ${catalog} becomes the target catalog, single
 # strings become the arrays the API expects, and id-keyed lists are sorted on publish.
 # Rules (tests/test_genie_space.py): sources are the semantic layer or contracted tables, no
 # personal data, SQL snippets qualify every column, every example SQL only reads attached sources.
-title: Bakehouse - Vendas e Satisfação
+title: Bakehouse Lakehouse - Vendas e Satisfação
+# Earlier titles: a space still published under one of them is renamed instead of duplicated.
+previous_titles:
+  - Bakehouse - Vendas e Satisfação
 description: >-
   Responde perguntas de gestores de negócio sobre as vendas da rede Bakehouse (receita, pedidos,
   ticket médio, unidades, produtos, franquias, cidades, países, forma de pagamento, dia e hora) e

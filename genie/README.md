@@ -5,7 +5,7 @@ como código e publicados pelo job em cada target (`[dev]`, `[ci]`, `[prod]`).
 
 | Espaço | Público | Fontes |
 |---|---|---|
-| Bakehouse - Vendas e Satisfação (`bakehouse_sales_satisfaction.yaml`) | Gestores de negócio | Metric view `gold.sales_metrics` (vendas) e `gold.sentiment_by_franchise` (satisfação) |
+| Bakehouse Lakehouse - Vendas e Satisfação (`bakehouse_sales_satisfaction.yaml`) | Gestores de negócio | Metric view `gold.sales_metrics` (vendas) e `gold.sentiment_by_franchise` (satisfação) |
 
 Perguntas que ele responde bem (validadas em dev pela API de conversa):
 
@@ -23,6 +23,8 @@ Perguntas que ele responde bem (validadas em dev pela API de conversa):
 - A tarefa `publish_genie_space` do job (depois de `publish_metric_views`) cria o espaço
   `[<target>] <title>` na pasta `genie/` do bundle ou, se ele já existir, atualiza a configuração.
   Edições feitas pela interface são sobrescritas na próxima execução: altere sempre o YAML.
+- Para renomear um espaço, mude `title` e mova o título antigo para `previous_titles`: o job encontra o
+  espaço existente pelo título antigo e o renomeia, sem criar um duplicado.
 - `tests/test_genie_space.py` (CI, offline) garante que:
   - as fontes são metric views de `semantic/` ou tabelas com contrato, e o catálogo nunca é fixo;
   - as colunas configuradas existem e as colunas de dado pessoal ficam ocultas;
