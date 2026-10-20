@@ -21,3 +21,4 @@ Mudar o que foi aprovado exige atualizar a spec no mesmo PR da mudança.
 |---|---|---|
 | 000 | [Pipeline medalhão e dashboard](000-pipeline-medalhao.md) | Entregue |
 | 001 | [Opiniões por produto nas avaliações](001-opinioes-por-produto.md) | Entregue |
+| 002 | [Servidor MCP da camada governada](002-servidor-mcp.md) | Aprovada |
