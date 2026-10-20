@@ -26,6 +26,25 @@ leitura e sem SQL livre.
 `claude mcp list` mostra se o servidor está conectado. O servidor usa a autenticação da CLI do Databricks, com
 as permissões de quem o executa, e consulta o warehouse definido no bundle.
 
+## Testar em produção
+
+O `.mcp.json` versionado aponta para `dev`. Para consultar `prod`, crie um override **local**, com o mesmo nome. A
+configuração local tem prioridade sobre a do projeto, as ferramentas continuam como `mcp__bakehouse__*` (o guardrail
+segue valendo) e nada muda no repositório:
+
+```bash
+claude mcp add bakehouse --scope local -e BAKEHOUSE_TARGET=prod -e PYTHONDONTWRITEBYTECODE=1 -- uv run --quiet python src/mcp_server/server.py
+claude mcp get bakehouse          # Scope: Local config, BAKEHOUSE_TARGET=prod
+```
+
+Cada resposta das ferramentas traz o campo `catalog`, que deve mostrar `bakehouse_prod`. Para voltar ao `dev`:
+
+```bash
+claude mcp remove bakehouse -s local
+```
+
+É preciso ter permissão de leitura nas tabelas gold de `bakehouse_prod`.
+
 ## Segurança
 
 | Regra | Como é garantida |

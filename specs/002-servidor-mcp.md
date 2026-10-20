@@ -168,6 +168,21 @@ positiva). As críticas são de sabor, principalmente ao Orchard Oasis, e de tex
 879,00 em 51 pedidos (ticket médio de 17,24). O agente também avisou que os dados vinham de `bakehouse_dev`, que
 a moeda não é informada e que a amostra de 6 avaliações é pequena.
 
+**Verificação extra em produção** (20/10/2026, depois do merge do PR #23). O servidor foi apontado para o target
+`prod` com um override local (`claude mcp add bakehouse --scope local -e BAKEHOUSE_TARGET=prod ...`), sem mudar o
+`.mcp.json` versionado (decisão Q2). Numa sessão `claude -p` restrita às ferramentas do servidor, a pergunta
+*"Quais franquias do Japão têm o pior sentimento e o que os clientes criticam nelas?"* foi respondida com:
+
+1. `get_franchise_sentiment(country="Japan", order="worst", limit=5)`
+2. `get_product_opinions(franchise_name="Tokyo Treats", opinion="negative")`
+3. `get_product_opinions(country="Japan", opinion="negative")`
+
+Todas as respostas das ferramentas vieram de `bakehouse_prod`: o catálogo aparece 8 vezes no registro da sessão, e
+`bakehouse_dev` nenhuma. Resposta, resumida: a Tokyo Treats é a pior do Japão (-0,50), seguida de Kobe, Nagoya,
+Hiroshima e Fukuoka (-0,33). No país, as críticas são sobretudo de sabor (Orchard Oasis, 28; Golden Gate Ginger,
+25) e de textura (Austin Almond Biscotti, 14; Outback Oatmeal, 13; Pearly Pies, 9). Ao final, o override foi
+removido, e o servidor voltou ao target `dev`.
+
 **Observações:**
 - Ao aprovar o servidor no Claude Code, a escolha ficou registrada como desativada em
   `.claude/settings.local.json` e foi corrigida para habilitada. A aprovação é por máquina e fica fora do Git.
