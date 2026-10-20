@@ -47,6 +47,8 @@ flowchart LR
 - Deploys em produção e no `ci` rodam **um por vez** e nunca são cancelados no meio, para não deixar o state travado.
 - **Prod nunca volta no tempo:** depois da aprovação, o deploy confere se o commit ainda é a ponta da `master`.
   Se não for (um *Re-run* de execução antiga, ou um deploy já superado por outro merge), ele aborta sem publicar.
+- **O repositório é a fonte da verdade:** o deploy em prod usa `--force`, então edições feitas pela interface no
+  dashboard de prod são sobrescritas. Para mudar o dashboard, altere `src/dashboards/bakehouse_sales.lvdash.json`.
 - O workflow também pode ser disparado manualmente (*Actions → Run workflow*) em qualquer branch, para rodar o
   gate de integração. A execução manual nunca faz deploy em prod.
 - Em prod, uma falha em qualquer tarefa do job (inclusive um contrato violado) dispara aviso por e-mail.

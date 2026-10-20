@@ -14,3 +14,5 @@ Problemas encontrados ao longo do desenvolvimento e da operação do projeto, co
 | Gráficos de vendas sem dados após um deploy | A metric view ainda não existe no target (só é criada quando o job roda) | Execute o job do target logo após o deploy |
 | `METRIC_VIEW_INVALID_VIEW_DEFINITION` ao testar a metric view manualmente | `databricks experimental aitools tools query` altera a indentação de textos com várias linhas | Teste o `CREATE ... WITH METRICS` no SQL editor ou pela Statement Execution API |
 | Mudança feita na interface do Genie sumiu | O job republica o Genie a partir de `genie/*.yaml` | Altere o YAML e publique |
+| Mudança feita na interface do dashboard de prod sumiu | O deploy em prod usa `--force` e republica o dashboard a partir de `src/dashboards/` | Altere o `.lvdash.json` e publique |
+| `dashboard "bakehouse_sales" has been modified remotely` no deploy de `dev` ou `ci` | O dashboard do target foi editado pela interface depois do último deploy | Leve a edição para o `.lvdash.json`, se quiser mantê-la, e rode `databricks bundle deploy -t <target> --force` |
