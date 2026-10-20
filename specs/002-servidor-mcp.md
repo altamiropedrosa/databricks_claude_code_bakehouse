@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| **Status** | Proposta |
+| **Status** | Aprovada |
 | **Autor** | Altamiro Pedrosa |
-| **Data** | 20/10/2026 |
+| **Data** | 20/10/2026 (proposta e aprovação, PR #22) |
 | **Implementação** | A definir, depois da aprovação |
 
 ## 1. Problema
@@ -48,13 +48,13 @@ Verificado no repositório e no workspace em 20/10/2026.
 - Guardrails, testes offline e documentação.
 
 **Fora**
-- Ferramentas que escrevem dados ou executam SQL livre (ver questão Q3).
-- Publicar o servidor como Databricks App, para acesso remoto (ver questão Q5).
+- Ferramentas que escrevem dados ou executam SQL livre (decisão Q3).
+- Publicar o servidor como Databricks App, para acesso remoto (decisão Q5).
 - Conectar os servidores MCP gerenciados do Databricks, como o do Genie: pode virar uma spec própria.
 
 ## 5. Requisitos funcionais
 
-Nomes e descrições das ferramentas ficam em inglês, como o código do projeto (ver questão Q4). Todas devolvem
+Nomes e descrições das ferramentas ficam em inglês, como o código do projeto (decisão Q4). Todas devolvem
 dados tabulares com as colunas nomeadas e o catálogo consultado.
 
 **RF1 · `query_sales_metrics`:** consulta a metric view `gold.sales_metrics` com `MEASURE()`.
@@ -125,21 +125,18 @@ acessar o Databricks.
 |---|---|
 | O agente pede uma combinação de dimensões que gera muitas linhas | Limite de linhas (RNF6) e mensagem orientando a agregar mais |
 | Permissão diferente entre quem roda o servidor e o service principal | O servidor usa as permissões do usuário; a documentação explica o acesso necessário |
-| O target `prod` exposto a um agente | Somente leitura, sem SQL livre e com guardrail; o target padrão é definido na questão Q2 |
+| O target `prod` exposto a um agente | Somente leitura, sem SQL livre e com guardrail; o target padrão é `dev` (decisão Q2) |
 | Mudança na API do SDK do MCP | Versão fixada no `uv.lock` |
 
-## 10. Questões em aberto (responder na revisão)
+## 10. Decisões da revisão
 
-- **Q1 · Nome do servidor:** `bakehouse`, com as ferramentas aparecendo como `mcp__bakehouse__*` no Claude
-  Code? Sugestão: sim, e o hook passa a cobrir esse prefixo.
-- **Q2 · Target padrão:** `dev` (menor privilégio) ou `prod` (dados mais completos)? Sugestão: `dev`, com `prod`
-  disponível por configuração explícita.
-- **Q3 · SQL livre somente leitura:** incluir uma quinta ferramenta para SQL livre? Sugestão: não. O valor do
-  servidor está justamente em consultar só pelas definições governadas.
-- **Q4 · Idioma das ferramentas:** nomes e descrições em inglês? Sugestão: sim, como o código. As respostas aos
-  usuários continuam em português, a cargo do cliente.
-- **Q5 · Databricks App (MCP remoto):** publicar o servidor como app agora ou numa spec futura? Sugestão: spec
-  futura.
+| Questão | Decisão |
+|---|---|
+| **Q1 · Nome do servidor:** `bakehouse`, com as ferramentas aparecendo como `mcp__bakehouse__*` no Claude Code? | `bakehouse`. O hook de segurança passa a cobrir o prefixo `mcp__bakehouse__` |
+| **Q2 · Target padrão:** `dev` (menor privilégio) ou `prod` (dados mais completos)? | `dev`. O `prod` fica disponível só por configuração explícita |
+| **Q3 · SQL livre somente leitura:** incluir uma quinta ferramenta para SQL livre? | Não. O servidor consulta só pelas definições governadas |
+| **Q4 · Idioma das ferramentas:** nomes e descrições em inglês? | Inglês, como o código. As respostas aos usuários ficam a cargo do cliente |
+| **Q5 · Databricks App (MCP remoto):** publicar como app agora ou numa spec futura? | Spec futura |
 
 ## 11. Resultado
 
