@@ -268,6 +268,8 @@ flowchart LR
 - Deploys em produção e no `ci` rodam **um por vez** e nunca são cancelados no meio, para não deixar o state travado.
 - **Prod nunca volta no tempo:** depois da aprovação, o deploy confere se o commit ainda é a ponta da `master`.
   Se não for (um *Re-run* de execução antiga, ou um deploy já superado por outro merge), ele aborta sem publicar.
+- **O repositório é a fonte da verdade:** o deploy em prod usa `--force`, então edições feitas pela interface no
+  dashboard de prod são sobrescritas. Para mudar o dashboard, altere `src/dashboards/bakehouse_sales.lvdash.json`.
 - O workflow também pode ser disparado manualmente (*Actions → Run workflow*) em qualquer branch, para rodar o
   gate de integração. A execução manual nunca faz deploy em prod.
 
@@ -329,6 +331,8 @@ Essas regras são verificadas automaticamente pelos testes.
 | Gráficos de vendas sem dados após um deploy | A metric view ainda não existe no target (só é criada quando o job roda) | Execute o job do target logo após o deploy |
 | `METRIC_VIEW_INVALID_VIEW_DEFINITION` ao testar a metric view manualmente | `databricks experimental aitools tools query` altera a indentação de textos com várias linhas | Teste o `CREATE ... WITH METRICS` no SQL editor ou pela Statement Execution API |
 | Mudança feita na interface do Genie sumiu | O job republica o Genie a partir de `genie/*.yaml` | Altere o YAML e publique |
+| Mudança feita na interface do dashboard de prod sumiu | O deploy em prod usa `--force` e republica o dashboard a partir de `src/dashboards/` | Altere o `.lvdash.json` e publique |
+| `dashboard "bakehouse_sales" has been modified remotely` no deploy de `dev` ou `ci` | O dashboard do target foi editado pela interface depois do último deploy | Leve a edição para o `.lvdash.json`, se quiser mantê-la, e rode `databricks bundle deploy -t <target> --force` |
 
 ## Referências
 

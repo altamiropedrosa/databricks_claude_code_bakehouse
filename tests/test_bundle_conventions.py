@@ -169,3 +169,9 @@ def test_prod_deploy_only_ships_the_tip_of_master():
     deploy = next(i for i, run in enumerate(steps) if run.startswith("databricks bundle deploy"))
     assert guard < deploy, "the tip-of-master check must run before the prod deploy"
     assert "exit 1" in steps[guard], "a stale commit must abort the job"
+
+
+def test_prod_deploy_overwrites_ui_edits():
+    workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "databricks.yml").read_text(encoding="utf-8"))
+    steps = [step.get("run", "") for step in workflow["jobs"]["deploy"]["steps"]]
+    assert "databricks bundle deploy -t prod --force" in steps, "the repository is the source of truth for prod"
