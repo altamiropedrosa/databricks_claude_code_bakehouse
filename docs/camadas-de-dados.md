@@ -44,3 +44,7 @@ Cada tabela gold, e também `silver.transactions`, tem um [contrato de dados](..
 **`[<target>] Bakehouse Lakehouse - Vendas e Satisfação`**, com as páginas *Visão geral* e *Filtros*. Vendas diárias e
 mix de produtos vêm da metric view `gold.sales_metrics` (via `MEASURE()`); desempenho das franquias e
 sentimento vêm das tabelas gold.
+
+O tema é **sempre claro**, mesmo para quem usa o Databricks no modo escuro: a paleta e as cores semânticas
+(sentimento, formatação condicional) são valores únicos pensados para fundo claro, e algumas sumiriam num
+fundo escuro. Um teste garante que as cores do modo escuro repetem as do claro.
