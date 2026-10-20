@@ -9,9 +9,7 @@ contratos de dados e CI/CD, tudo declarado como código.**
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?logo=githubactions&logoColor=white)
 
-<!-- Screenshot do dashboard: salvar em docs/images/dashboard.png e descomentar
-![Dashboard AI/BI Vendas e Satisfação](docs/images/dashboard.png)
--->
+![Dashboard AI/BI Bakehouse Lakehouse - Vendas e Satisfação](docs/images/dashboard.png)
 
 Pipeline em **arquitetura medalhão** (bronze → silver → gold) sobre o dataset de exemplo `samples.bakehouse`,
 uma rede fictícia de padarias. As avaliações dos clientes são classificadas por **IA generativa**, as métricas
