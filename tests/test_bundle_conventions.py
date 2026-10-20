@@ -160,3 +160,12 @@ def test_only_prod_job_failures_send_email():
     for name in ("dev", "ci"):
         assert "resources" not in targets[name], f"{name} must not override job notifications"
     assert "email_notifications" not in (RESOURCES / "bakehouse.job.yml").read_text(encoding="utf-8")
+
+
+def test_prod_deploy_only_ships_the_tip_of_master():
+    workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "databricks.yml").read_text(encoding="utf-8"))
+    steps = [step.get("run", "") for step in workflow["jobs"]["deploy"]["steps"]]
+    guard = next(i for i, run in enumerate(steps) if "refs/heads/master" in run and "GITHUB_SHA" in run)
+    deploy = next(i for i, run in enumerate(steps) if run.startswith("databricks bundle deploy"))
+    assert guard < deploy, "the tip-of-master check must run before the prod deploy"
+    assert "exit 1" in steps[guard], "a stale commit must abort the job"

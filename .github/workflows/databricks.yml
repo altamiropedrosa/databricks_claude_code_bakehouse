@@ -98,6 +98,21 @@ jobs:
       group: deploy-prod
       cancel-in-progress: false
     steps:
+      # Prod nunca volta no tempo: um "Re-run" de execucao antiga, ou a aprovacao de um deploy que
+      # ja foi superado por outro merge, publicaria codigo velho. So segue se este commit ainda for
+      # a ponta da master no momento do deploy (checado DEPOIS da aprovacao).
+      - name: Garante que o commit ainda e o ultimo da master
+        run: |
+          latest=$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/master | cut -f1)
+          if [ -z "$latest" ]; then
+            echo "::error::Nao foi possivel ler a ponta da master. Deploy abortado."
+            exit 1
+          fi
+          if [ "$latest" != "$GITHUB_SHA" ]; then
+            echo "::error::Este run publicaria ${GITHUB_SHA}, mas a master ja esta em ${latest}. Deploy abortado: commits antigos nunca vao para prod. Para publicar, use o run do commit mais recente."
+            exit 1
+          fi
+          echo "OK: ${GITHUB_SHA} e a ponta da master."
       - uses: actions/checkout@v5
       - uses: databricks/setup-cli@v1.21.0
         with:
