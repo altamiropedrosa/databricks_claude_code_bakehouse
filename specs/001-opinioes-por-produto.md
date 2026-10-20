@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| **Status** | Proposta |
+| **Status** | Aprovada |
 | **Autor** | Altamiro Pedrosa |
-| **Data** | 20/10/2026 |
+| **Data** | 20/10/2026 (proposta e aprovação, PR #18) |
 | **Implementação** | A definir, depois da aprovação |
 
 ## 1. Problema
@@ -157,12 +157,14 @@ e o SQL validado:
 | Dados sintéticos: avaliações parecidas entre si podem inflar padrões | Os critérios CA4 e CA5 medem a qualidade; a limitação fica registrada no contrato |
 | Avaliação longa com opinião ambígua | Opinião `neutral` e motivo `other` existem para não forçar uma classificação |
 
-## 10. Questões em aberto (responder na revisão)
+## 10. Decisões da revisão
 
-- **Q1 · Nomes:** `review_product_opinions` e `product_opinions_by_franchise` estão bons?
-- **Q2 · Temas fora de produto:** incluir um motivo `service` (atendimento), mesmo raro nestes dados?
-- **Q3 · Limites:** 5% (CA2), 70% (CA4) e 80%/70% (CA5) são aceitáveis?
-- **Q4 · Camada semântica:** criar uma metric view de opiniões para o Genie, ou o mart gold basta nesta entrega?
+| Questão | Decisão |
+|---|---|
+| **Q1 · Nomes:** `review_product_opinions` e `product_opinions_by_franchise` estão bons? | Mantidos |
+| **Q2 · Temas fora de produto:** incluir um motivo `service` (atendimento), mesmo raro nestes dados? | Não incluir. Atendimento quase não aparece nas avaliações; volta numa spec futura se surgir nos dados |
+| **Q3 · Limites:** 5% (CA2), 70% (CA4) e 80%/70% (CA5) são aceitáveis? | Mantidos, coerentes com a amostra da seção 3 |
+| **Q4 · Camada semântica:** criar uma metric view de opiniões para o Genie, ou o mart gold basta nesta entrega? | O mart gold basta. Uma metric view de opiniões fica para uma spec futura |
 
 ## 11. Resultado
 
