@@ -151,3 +151,12 @@ def test_ci_target_is_isolated_from_dev_and_prod():
     assert len(catalogs) == len(set(catalogs)), "each target needs its own catalog"
     assert targets["ci"]["run_as"] == targets["prod"]["run_as"], "ci runs as the same identity as prod"
     assert targets["ci"]["presets"]["trigger_pause_status"] == "PAUSED"
+
+
+def test_only_prod_job_failures_send_email():
+    targets = yaml.safe_load((ROOT / "databricks.yml").read_text(encoding="utf-8"))["targets"]
+    job = targets["prod"]["resources"]["jobs"]["bakehouse_medallion_job"]
+    assert job["email_notifications"]["on_failure"], "prod job failures must alert someone"
+    for name in ("dev", "ci"):
+        assert "resources" not in targets[name], f"{name} must not override job notifications"
+    assert "email_notifications" not in (RESOURCES / "bakehouse.job.yml").read_text(encoding="utf-8")

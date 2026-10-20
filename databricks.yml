@@ -78,3 +78,12 @@ targets:
         level: CAN_MANAGE
       - service_principal_name: ${var.service_principal}
         level: CAN_MANAGE
+    # Prod only: dev runs are manual and ci failures already show up on the pull request.
+    # Any failed task fails the run, including a violated data contract (enforce_data_contracts).
+    resources:
+      jobs:
+        bakehouse_medallion_job:
+          email_notifications:
+            on_failure:
+              - altamiro.pedrosa@gmail.com
+            no_alert_for_skipped_runs: true
