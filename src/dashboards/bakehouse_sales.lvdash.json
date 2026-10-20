@@ -74,6 +74,30 @@
         "'Neutro', neutral_reviews, 'Negativo', negative_reviews) AS (sentiment, review_count) ",
         "FROM sentiment_by_franchise)"
       ]
+    },
+    {
+      "name": "ds_opinions",
+      "displayName": "Opiniões por produto",
+      "queryLines": [
+        "SELECT franchise_name, city, country, product, ",
+        "CASE reason WHEN 'taste' THEN 'Sabor' WHEN 'texture' THEN 'Textura' WHEN 'freshness' THEN 'Frescor' WHEN 'price' THEN 'Preço' WHEN 'availability' THEN 'Disponibilidade' ELSE 'Outro' END AS reason_pt, ",
+        "mentions, positive_mentions, negative_mentions ",
+        "FROM product_opinions_by_franchise"
+      ]
+    },
+    {
+      "name": "ds_opinions_top",
+      "displayName": "Produto mais criticado por franquia",
+      "queryLines": [
+        "SELECT franchise_name, city, country, product, ",
+        "CASE reason WHEN 'taste' THEN 'Sabor' WHEN 'texture' THEN 'Textura' WHEN 'freshness' THEN 'Frescor' WHEN 'price' THEN 'Preço' WHEN 'availability' THEN 'Disponibilidade' ELSE 'Outro' END AS reason_pt, ",
+        "negative_mentions, franchise_negative_mentions FROM ( ",
+        "SELECT *, sum(negative_mentions) OVER (PARTITION BY franchise_id) AS franchise_negative_mentions, ",
+        "row_number() OVER (PARTITION BY franchise_id ORDER BY negative_mentions DESC, product, reason) AS rank ",
+        "FROM product_opinions_by_franchise) ",
+        "WHERE rank = 1 AND negative_mentions > 0 ",
+        "ORDER BY franchise_negative_mentions DESC, franchise_name"
+      ]
     }
   ],
   "pages": [
@@ -933,6 +957,209 @@
             "width": 7,
             "height": 7
           }
+        },
+        {
+          "widget": {
+            "name": "opinions_header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## O que os clientes criticam\n",
+                "\n",
+                "Produto e motivo de cada opinião, extraídos do texto dos reviews com ai_extract."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 34,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "opinions_by_product",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_opinions",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "name": "product",
+                      "expression": "`product`"
+                    },
+                    {
+                      "name": "reason_pt",
+                      "expression": "`reason_pt`"
+                    },
+                    {
+                      "name": "sum(negative_mentions)",
+                      "expression": "SUM(`negative_mentions`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(negative_mentions)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Críticas"
+                },
+                "y": {
+                  "fieldName": "product",
+                  "displayName": "Produto",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "color": {
+                  "fieldName": "reason_pt",
+                  "displayName": "Motivo",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Sabor",
+                        "color": "#FF3621"
+                      },
+                      {
+                        "value": "Textura",
+                        "color": "#1B3139"
+                      },
+                      {
+                        "value": "Frescor",
+                        "color": "#5A6F77"
+                      },
+                      {
+                        "value": "Disponibilidade",
+                        "color": "#8D9BA1"
+                      },
+                      {
+                        "value": "Preço",
+                        "color": "#C2CBCE"
+                      },
+                      {
+                        "value": "Outro",
+                        "color": "#3E5560"
+                      }
+                    ]
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Críticas por produto e motivo",
+                "showDescription": true,
+                "description": "Opiniões negativas sobre cada produto"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 36,
+            "width": 5,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "opinions_top_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_opinions_top",
+                  "disaggregated": true,
+                  "fields": [
+                    {
+                      "name": "franchise_name",
+                      "expression": "`franchise_name`"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "country",
+                      "expression": "`country`"
+                    },
+                    {
+                      "name": "product",
+                      "expression": "`product`"
+                    },
+                    {
+                      "name": "reason_pt",
+                      "expression": "`reason_pt`"
+                    },
+                    {
+                      "name": "negative_mentions",
+                      "expression": "`negative_mentions`"
+                    },
+                    {
+                      "name": "franchise_negative_mentions",
+                      "expression": "`franchise_negative_mentions`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "franchise_name",
+                    "displayName": "Franquia"
+                  },
+                  {
+                    "fieldName": "city",
+                    "displayName": "Cidade"
+                  },
+                  {
+                    "fieldName": "country",
+                    "displayName": "País"
+                  },
+                  {
+                    "fieldName": "product",
+                    "displayName": "Produto mais criticado"
+                  },
+                  {
+                    "fieldName": "reason_pt",
+                    "displayName": "Motivo"
+                  },
+                  {
+                    "fieldName": "negative_mentions",
+                    "displayName": "Críticas ao produto"
+                  },
+                  {
+                    "fieldName": "franchise_negative_mentions",
+                    "displayName": "Críticas na franquia"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Produto mais criticado por franquia",
+                "showDescription": true,
+                "description": "Franquias com mais críticas primeiro"
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 36,
+            "width": 7,
+            "height": 7
+          }
         }
       ]
     },
@@ -1069,6 +1296,32 @@
                     }
                   ]
                 }
+              },
+              {
+                "name": "filter_country_ds_opinions",
+                "query": {
+                  "datasetName": "ds_opinions",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "name": "country",
+                      "expression": "`country`"
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "filter_country_ds_opinions_top",
+                "query": {
+                  "datasetName": "ds_opinions_top",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "name": "country",
+                      "expression": "`country`"
+                    }
+                  ]
+                }
               }
             ],
             "spec": {
@@ -1095,6 +1348,14 @@
                   {
                     "fieldName": "country",
                     "queryName": "filter_country_ds_sentiment_mix"
+                  },
+                  {
+                    "fieldName": "country",
+                    "queryName": "filter_country_ds_opinions"
+                  },
+                  {
+                    "fieldName": "country",
+                    "queryName": "filter_country_ds_opinions_top"
                   }
                 ]
               },
