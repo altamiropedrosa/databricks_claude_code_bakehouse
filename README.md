@@ -3,11 +3,14 @@
 [![Databricks CI/CD](https://github.com/altamiropedrosa/databricks_claude_code_bakehouse/actions/workflows/databricks.yml/badge.svg)](https://github.com/altamiropedrosa/databricks_claude_code_bakehouse/actions/workflows/databricks.yml)
 
 Pipeline de dados em **arquitetura medalhão** (bronze → silver → gold) sobre o dataset de exemplo
-`samples.bakehouse`, com **análise de sentimento por IA** das avaliações de clientes, um **dashboard AI/BI**
-e **CI/CD com GitHub Actions** fazendo deploy em produção por um service principal.
+`samples.bakehouse`, com **análise de sentimento por IA** das avaliações de clientes, **contratos de dados**
+verificados a cada execução, uma **camada semântica** (metric view) com as métricas de negócio, um
+**dashboard AI/BI**, um **Genie space** para perguntas em linguagem natural e **CI/CD com GitHub Actions**
+fazendo deploy em produção por um service principal.
 
 Todo o projeto é declarado como código com **Declarative Automation Bundles (DABs)**: schemas, pipeline,
-job e dashboard são versionados neste repositório e promovidos entre ambientes trocando apenas o catálogo.
+job, contratos, métricas, dashboard e Genie são versionados neste repositório e promovidos entre ambientes
+trocando apenas o catálogo.
 
 ---
 
@@ -15,6 +18,8 @@ job e dashboard são versionados neste repositório e promovidos entre ambientes
 
 - [Arquitetura](#arquitetura)
 - [Camadas de dados](#camadas-de-dados)
+- [Contratos de dados](#contratos-de-dados)
+- [Camada semântica e Genie](#camada-semântica-e-genie)
 - [Estrutura do repositório](#estrutura-do-repositório)
 - [Ambientes](#ambientes)
 - [Pré-requisitos](#pré-requisitos)
@@ -41,16 +46,25 @@ flowchart LR
     end
 
     src --> bronze
-    gold --> dash["📊 Dashboard AI/BI<br/>Vendas e Satisfação"]
+    contracts{{"📜 Contratos de dados<br/>schema · chave · prazo"}}
+    silver & gold -. verificadas por .-> contracts
+    silver --> mv["📐 Metric view<br/>gold.sales_metrics"]
+    mv --> dash["📊 Dashboard AI/BI<br/>Vendas e Satisfação"]
+    gold --> dash
+    mv --> genie["💬 Genie space<br/>Vendas e Satisfação"]
+    gold --> genie
     job["⏰ Job diário 06:00<br/>America/Sao_Paulo"] -. dispara .-> pipeline
 ```
 
-| Componente | Recurso no bundle | Descrição |
+| Componente | Onde fica | Descrição |
 |---|---|---|
 | Schemas | `resources/bakehouse.schemas.yml` | Um schema Unity Catalog por camada: `bronze`, `silver`, `gold` |
 | Pipeline | `resources/bakehouse.pipeline.yml` | Pipeline declarativo único e serverless com as três camadas, em SQL |
-| Job | `resources/bakehouse.job.yml` | Atualiza o pipeline diariamente às 06:00 (pausado em dev) |
-| Dashboard | `resources/bakehouse.dashboard.yml` | Dashboard AI/BI sobre as tabelas gold |
+| Contratos de dados | `contracts/` | Interface de cada tabela publicada (ODCS v3), cobrada no CI e a cada execução |
+| Camada semântica | `semantic/` | Metric view `gold.sales_metrics`: as métricas de vendas definidas uma única vez |
+| Genie space | `genie/` | Perguntas em linguagem natural sobre vendas e satisfação |
+| Job | `resources/bakehouse.job.yml` | Diariamente às 06:00 (pausado em dev e ci): pipeline → verificação dos contratos → metric views → Genie |
+| Dashboard | `resources/bakehouse.dashboard.yml` | Dashboard AI/BI sobre a metric view e as tabelas gold |
 
 ## Camadas de dados
 
@@ -85,19 +99,63 @@ pagamento desconhecido são **registradas** nas métricas do pipeline, sem desca
 | `sentiment_by_franchise` | franquia | Contagens e `net_sentiment` ∈ [-1, 1] |
 | `top_customers` | cliente | Ranking por receita e produto favorito |
 
-As medidas das tabelas diárias são **aditivas**: qualquer agregação é um `SUM`, e o ticket médio deve ser
-calculado como `SUM(revenue) / SUM(orders)`.
+As medidas das tabelas diárias são **aditivas**: qualquer agregação é um `SUM`. Para receita, pedidos,
+ticket médio e afins, prefira a [camada semântica](#camada-semântica-e-genie) (`gold.sales_metrics`), que já
+recalcula razões como o ticket médio corretamente em qualquer nível de agregação.
 
 ### 📊 Dashboard
 
-**`[<target>] Bakehouse - Vendas e Satisfacao`**, com as páginas *Visão geral* e *Filtros*, construído
-exclusivamente sobre a camada gold.
+**`[<target>] Bakehouse - Vendas e Satisfacao`**, com as páginas *Visão geral* e *Filtros*. Vendas diárias e
+mix de produtos vêm da metric view `gold.sales_metrics` (via `MEASURE()`); desempenho das franquias e
+sentimento vêm das tabelas gold.
+
+## Contratos de dados
+
+Cada tabela publicada tem um **contrato de dados** em `contracts/<camada>/<tabela>.yaml`, no formato
+[Open Data Contract Standard (ODCS) v3](https://bitol-io.github.io/open-data-contract-standard/). Hoje: as
+6 tabelas gold (obrigatório) e `silver.transactions`, base da camada semântica.
+
+O contrato define colunas, tipos, obrigatoriedade (`required` vira `NOT NULL`), chave primária, descrição,
+classificação de dado pessoal, regras de qualidade, dono e SLA (atualização diária, no máximo 26 h). Ele é
+cobrado em três momentos:
+
+| Quando | O que garante | Onde |
+|---|---|---|
+| No PR (CI, offline) | O SQL declara exatamente as colunas, tipos, `NOT NULL`, comentários e expectations do contrato; mudança incompatível exige versão MAJOR | `tests/test_data_contracts.py` |
+| Na tabela | Colunas obrigatórias são `NOT NULL`: um nulo inesperado falha o pipeline em vez de chegar ao dashboard; a documentação aparece no Unity Catalog | SQL do pipeline |
+| Após cada execução | O que **foi publicado** bate com o contrato: schema, chave sem duplicatas e prazo de atualização; aplica as tags `data_contract` e `classification` | Tarefa `enforce_data_contracts` do job |
+
+**Versionamento (SemVer):** remover ou renomear coluna, mudar tipo ou deixar de ser obrigatória é mudança
+**incompatível** (MAJOR); nova coluna é MINOR; só documentação é PATCH. Detalhes e passo a passo em
+[contracts/README.md](contracts/README.md).
+
+## Camada semântica e Genie
+
+**Metric view `gold.sales_metrics`** ([semantic/README.md](semantic/README.md)): as métricas de vendas
+definidas **uma única vez** sobre `silver.transactions`, com 13 dimensões (data, mês, produto, franquia, país,
+pagamento...) e 7 medidas (`revenue`, `orders`, `units_sold`, `avg_ticket`, `units_per_order`,
+`unique_customers`, `active_franchises`).
+
+```sql
+SELECT franchise_country, MEASURE(revenue) AS receita, MEASURE(avg_ticket) AS ticket_medio
+FROM bakehouse_prod.gold.sales_metrics
+GROUP BY ALL;
+```
+
+- Só pode usar colunas que estão no contrato da fonte, e nunca colunas de dado pessoal (verificado no CI).
+- É republicada pelo job **depois** da verificação dos contratos: contrato violado não chega às métricas.
+
+**Genie space `[<target>] Bakehouse - Vendas e Satisfação`** ([genie/README.md](genie/README.md)): perguntas
+em português para gestores de negócio sobre vendas (pela metric view) e satisfação (`gold.sentiment_by_franchise`),
+como *"Qual franquia teve a maior receita no último mês?"* ou *"Quais franquias têm o pior sentimento nas
+avaliações?"*. A configuração é versionada em YAML e publicada pelo job em cada target. Edições feitas pela
+interface são sobrescritas: altere sempre o YAML.
 
 ## Estrutura do repositório
 
 ```text
 .
-├── databricks.yml                      # Bundle: variáveis e targets (dev / prod)
+├── databricks.yml                      # Bundle: variáveis e targets (dev / ci / prod)
 ├── resources/                          # Definição dos recursos Databricks
 │   ├── bakehouse.schemas.yml
 │   ├── bakehouse.pipeline.yml
@@ -263,10 +321,18 @@ Essas regras são verificadas automaticamente pelos testes.
 | `User does not have CREATE SCHEMA and USE CATALOG` no deploy | Service principal sem permissão no catálogo | Aplique o `GRANT` da seção de configuração |
 | Dashboard sem dados após o primeiro deploy | O pipeline ainda não rodou | Execute `databricks bundle run bakehouse_medallion_job -t <target>` |
 | Deploy parado em *Waiting* | Aguardando aprovação do environment `prod` | Aprove em *Actions → run → Review deployments* |
+| Deploy parado em *Pending*, sem pedir aprovação | Uma execução mais antiga ainda aguarda aprovação e segura a fila `deploy-prod` | Rejeite a aprovação da execução antiga; a mais nova segue para aprovação |
+| Job falha em `enforce_data_contracts` | O que foi publicado não bate com o contrato (schema, chave duplicada ou tabela atrasada) | O log da tarefa lista cada violação; corrija o SQL ou atualize o contrato (com versão) |
+| Gráficos de vendas sem dados após um deploy | A metric view ainda não existe no target (só é criada quando o job roda) | Execute o job do target logo após o deploy |
+| `METRIC_VIEW_INVALID_VIEW_DEFINITION` ao testar a metric view manualmente | `databricks experimental aitools tools query` altera a indentação de textos com várias linhas | Teste o `CREATE ... WITH METRICS` no SQL editor ou pela Statement Execution API |
+| Mudança feita na interface do Genie sumiu | O job republica o Genie a partir de `genie/*.yaml` | Altere o YAML e publique |
 
 ## Referências
 
 - [Declarative Automation Bundles](https://docs.databricks.com/dev-tools/bundles/index.html)
 - [Lakeflow Declarative Pipelines](https://docs.databricks.com/aws/en/dlt/)
+- [Open Data Contract Standard (ODCS)](https://bitol-io.github.io/open-data-contract-standard/)
+- [Unity Catalog metric views](https://docs.databricks.com/metric-views/)
+- [Genie](https://docs.databricks.com/genie/)
 - [AI Functions — `ai_analyze_sentiment`](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_analyze_sentiment)
 - [Autenticação OAuth M2M](https://docs.databricks.com/aws/en/dev-tools/auth/oauth-m2m)
