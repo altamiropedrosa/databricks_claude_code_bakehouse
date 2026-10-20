@@ -1,0 +1,115 @@
+# Data contract (ODCS v3) for gold.product_opinions_by_franchise. Rules: contracts/README.md.
+# Spec: specs/001-opinioes-por-produto.md.
+apiVersion: v3.0.2
+kind: DataContract
+id: bakehouse.gold.product_opinions_by_franchise
+name: product_opinions_by_franchise
+version: 1.0.0
+status: active
+domain: bakehouse
+dataProduct: bakehouse_medallion
+team:
+  - username: altamiropedrosa
+    role: owner
+description:
+  purpose: >-
+    What customers praise and criticize in each product, and why, per franchise. Extracted from the
+    review text with ai_extract.
+  usage: Section "O que os clientes criticam" of the sales dashboard and the Genie space.
+  limitations: >-
+    Counts only, all additive: compute shares at query time. product and reason values are in English.
+    Synthetic reviews: similar texts can inflate patterns. Franchises without reviews have no rows.
+schema:
+  - name: product_opinions_by_franchise
+    physicalName: gold.product_opinions_by_franchise
+    physicalType: materialized_view
+    description: Customer opinions about each product per franchise and reason, extracted from reviews with AI
+    dataGranularityDescription: One row per franchise, product and reason.
+    properties:
+      - name: franchise_id
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        primaryKey: true
+        primaryKeyPosition: 1
+        description: Franchise identifier
+      - name: franchise_name
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise name
+      - name: city
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise city
+      - name: country
+        logicalType: string
+        physicalType: STRING
+        required: false
+        description: Franchise country
+      - name: product
+        logicalType: string
+        physicalType: STRING
+        required: true
+        primaryKey: true
+        primaryKeyPosition: 2
+        description: Product cited in the reviews
+      - name: reason
+        logicalType: string
+        physicalType: STRING
+        required: true
+        primaryKey: true
+        primaryKeyPosition: 3
+        description: Main reason of the opinion, taste, texture, freshness, price, availability or other
+      - name: mentions
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Reviews citing the product for this reason
+      - name: positive_mentions
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Mentions with a positive opinion
+      - name: negative_mentions
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Mentions with a negative opinion
+      - name: neutral_mentions
+        logicalType: integer
+        physicalType: BIGINT
+        required: true
+        description: Mentions with a neutral opinion
+    quality:
+      - name: valid_product
+        type: custom
+        engine: lakeflow
+        implementation: >-
+          product IN ('Outback Oatmeal', 'Austin Almond Biscotti', 'Orchard Oasis', 'Golden Gate Ginger',
+          'Tokyo Tidbits', 'Pearly Pies')
+        customProperties:
+          - property: onViolation
+            value: warn
+      - name: valid_reason
+        type: custom
+        engine: lakeflow
+        implementation: reason IN ('taste', 'texture', 'freshness', 'price', 'availability', 'other')
+        customProperties:
+          - property: onViolation
+            value: warn
+      - name: known_franchise
+        type: custom
+        engine: lakeflow
+        implementation: franchise_name IS NOT NULL
+        customProperties:
+          - property: onViolation
+            value: warn
+slaProperties:
+  - property: frequency
+    value: 1
+    unit: d
+  - property: latency
+    value: 26
+    unit: h
