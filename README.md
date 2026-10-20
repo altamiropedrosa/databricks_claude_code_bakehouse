@@ -194,6 +194,7 @@ Passo a passo completo, estrutura do repositório e convenções em [docs/desenv
 
 | Documento | Conteúdo |
 |---|---|
+| [specs/](specs/README.md) | Especificações: cada funcionalidade nova começa por uma spec aprovada antes do código |
 | [docs/camadas-de-dados.md](docs/camadas-de-dados.md) | Cada tabela das camadas bronze, silver e gold, e o dashboard |
 | [docs/desenvolvimento.md](docs/desenvolvimento.md) | Pré-requisitos, desenvolvimento local, testes, estrutura do repositório e convenções |
 | [docs/ci-cd.md](docs/ci-cd.md) | Ambientes, fluxo de CI/CD e configuração de produção |
