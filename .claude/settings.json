@@ -23,7 +23,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash|PowerShell|mcp__databricks__.*",
+        "matcher": "Bash|PowerShell|mcp__databricks__.*|mcp__bakehouse__.*",
         "hooks": [
           {
             "type": "command",
