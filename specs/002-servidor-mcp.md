@@ -109,7 +109,8 @@ acessar o Databricks.
 ## 8. Decisões técnicas propostas
 
 - **SDK oficial do MCP para Python (`mcp`, com FastMCP)**, transporte stdio: é o padrão para servidores
-  locais e funciona com qualquer cliente MCP, não só com o Claude Code.
+  locais e funciona com qualquer cliente MCP, não só com o Claude Code. *Na implementação (PR #23), o SDK
+  instalado foi o 2.x, em que o `FastMCP` passou a se chamar `MCPServer`; a decisão não muda.*
 - **Statement Execution API do `databricks-sdk`** no warehouse que o bundle já usa (*Serverless Starter
   Warehouse*, resolvido por nome): não exige cluster nem Databricks Connect.
 - **Listas de permissão lidas dos arquivos governados** (`semantic/` e `contracts/`): uma medida nova na metric

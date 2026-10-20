@@ -40,6 +40,7 @@ mais no último mês?"* e receber a resposta direto dos dados.
 | DevOps / DataOps | Infraestrutura como código, três ambientes, gate de integração, deploy com aprovação | [`databricks.yml`](databricks.yml), [CI/CD](docs/ci-cd.md) |
 | Testes automatizados | Mais de 170 testes offline cobrando convenções, contratos e camada semântica | [`tests/`](tests), [desenvolvimento](docs/desenvolvimento.md#testes) |
 | Desenvolvimento com IA | Agente de IA como par de programação, com guardrails que bloqueiam ações destrutivas | [Desenvolvimento assistido por IA](#desenvolvimento-assistido-por-ia) |
+| Model Context Protocol (MCP) | Servidor MCP próprio que expõe a camada governada a agentes de IA, somente leitura e sem SQL livre | [Servidor MCP](#servidor-mcp-para-agentes-de-ia), [`src/mcp_server/`](src/mcp_server) |
 
 ## Arquitetura
 
@@ -97,6 +98,15 @@ a IA usa as **mesmas definições de receita e ticket médio** do dashboard em v
 A configuração (instruções, perguntas de exemplo, tabelas) é versionada em YAML e publicada pelo job.
 
 ![Genie respondendo em português quais franquias têm o pior sentimento nas avaliações](docs/images/genie.svg)
+
+## Servidor MCP para agentes de IA
+
+O servidor [MCP](https://modelcontextprotocol.io) `bakehouse` ([docs/mcp.md](docs/mcp.md)) deixa qualquer agente de
+IA, como o Claude Code, consultar os dados **pelas mesmas definições do dashboard e do Genie**: vendas pela metric
+view, opiniões e sentimento pelos marts gold e contratos pelos arquivos versionados. Ele é somente leitura e não
+aceita SQL livre: medidas, dimensões e colunas vêm de listas de permissão lidas de `semantic/` e `contracts/`, os
+valores viajam como parâmetros e dado pessoal nunca sai. Quem clona o repositório já o recebe configurado em
+[`.mcp.json`](.mcp.json). Nasceu da [spec 002](specs/002-servidor-mcp.md).
 
 ## Qualidade e governança
 
@@ -164,7 +174,7 @@ programação, com autonomia limitada por guardrails explícitos:
   apagar catálogos, schemas ou tabelas, fazer deploy em prod nem `push --force`.
 - **Hook de segurança** em [`.claude/hooks/block_destructive.py`](.claude/hooks/block_destructive.py), que
   intercepta todo comando antes de executar e bloqueia `DROP`, `TRUNCATE`, `DELETE FROM` e remoções pela CLI,
-  inclusive SQL enviado por ferramentas MCP. Ele falha fechado: na dúvida, bloqueia.
+  inclusive as chamadas às ferramentas MCP do projeto. Ele falha fechado: na dúvida, bloqueia.
 - **Testes e CI como rede de segurança:** todo código, gerado ou não, passa por lint, testes offline e
   execução completa no ambiente de integração antes de chegar a produção, que só recebe deploy com aprovação humana.
 
@@ -172,7 +182,8 @@ programação, com autonomia limitada por guardrails explícitos:
 
 **Databricks:** Lakeflow Declarative Pipelines · Lakeflow Jobs · Unity Catalog · AI Functions · Metric Views ·
 AI/BI Dashboards · Genie · computação serverless · Declarative Automation Bundles<br/>
-**Linguagens:** SQL (pipeline) · Python 3.12 (tarefas do job e testes)<br/>
+**Linguagens:** SQL (pipeline) · Python 3.12 (tarefas do job, servidor MCP e testes)<br/>
+**IA:** AI Functions (`ai_analyze_sentiment`, `ai_extract`) · Genie · Model Context Protocol (SDK `mcp`) · Claude Code<br/>
 **Qualidade:** Open Data Contract Standard v3 · pytest · ruff<br/>
 **Entrega:** GitHub Actions · OAuth M2M com service principal · uv
 
@@ -205,6 +216,7 @@ Passo a passo completo, estrutura do repositório e convenções em [docs/desenv
 | [docs/camadas-de-dados.md](docs/camadas-de-dados.md) | Cada tabela das camadas bronze, silver e gold, e o dashboard |
 | [docs/desenvolvimento.md](docs/desenvolvimento.md) | Pré-requisitos, desenvolvimento local, testes, estrutura do repositório e convenções |
 | [docs/ci-cd.md](docs/ci-cd.md) | Ambientes, fluxo de CI/CD e configuração de produção |
+| [docs/mcp.md](docs/mcp.md) | Servidor MCP `bakehouse`: ferramentas, uso com o Claude Code e segurança |
 | [docs/solucao-de-problemas.md](docs/solucao-de-problemas.md) | Problemas reais encontrados, com causa e solução |
 | [contracts/README.md](contracts/README.md) | Contratos de dados: formato, regras de versão e passo a passo |
 | [semantic/README.md](semantic/README.md) | Camada semântica: dimensões, medidas e como evoluir |
