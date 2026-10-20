@@ -18,8 +18,9 @@ mais no último mês?"* e receber a resposta direto dos dados.
 
 ## Em resumo
 
-- **Pipeline declarativo serverless** (Lakeflow) com 15 tabelas em três camadas, escrito em SQL.
-- **Análise de sentimento com IA** (`ai_analyze_sentiment`) sobre as avaliações, pontuando cada uma **uma única vez**.
+- **Pipeline declarativo serverless** (Lakeflow) com 17 tabelas em três camadas, escrito em SQL.
+- **Análise de sentimento com IA** (`ai_analyze_sentiment`) sobre as avaliações, pontuando cada uma **uma única vez**,
+  e **opinião por produto** (`ai_extract`): qual produto foi criticado e por quê.
 - **Contratos de dados** (ODCS v3) cobrados no pull request e após cada execução em produção.
 - **Camada semântica** (metric view) com as métricas de vendas, compartilhada pelo dashboard e pelo Genie.
 - **Dashboard AI/BI** e **Genie space** para perguntas em linguagem natural.
@@ -33,11 +34,11 @@ mais no último mês?"* e receber a resposta direto dos dados.
 | Competência | Como aparece aqui | Onde ver |
 |---|---|---|
 | Engenharia de dados | Medalhão com streaming tables e materialized views, ingestão incremental, expectations de qualidade | [`src/pipelines/`](src/pipelines/bakehouse/transformations), [camadas de dados](docs/camadas-de-dados.md) |
-| IA generativa aplicada | Sentimento das avaliações com AI Functions em SQL; Genie respondendo em linguagem natural sobre métricas governadas | [`reviews_sentiment.sql`](src/pipelines/bakehouse/transformations/silver/reviews_sentiment.sql), [`genie/`](genie/README.md) |
+| IA generativa aplicada | Sentimento e opinião por produto extraídos das avaliações com AI Functions em SQL; Genie respondendo em linguagem natural sobre métricas governadas | [`reviews_sentiment.sql`](src/pipelines/bakehouse/transformations/silver/reviews_sentiment.sql), [`genie/`](genie/README.md) |
 | Qualidade e governança | Contratos ODCS v3 com SemVer, tags de dado pessoal no Unity Catalog, mascaramento do cartão | [`contracts/`](contracts/README.md) |
 | Modelagem analítica | Marts gold aditivos e metric view com dimensões e medidas reutilizáveis | [`semantic/`](semantic/README.md) |
 | DevOps / DataOps | Infraestrutura como código, três ambientes, gate de integração, deploy com aprovação | [`databricks.yml`](databricks.yml), [CI/CD](docs/ci-cd.md) |
-| Testes automatizados | Mais de 140 testes offline cobrando convenções, contratos e camada semântica | [`tests/`](tests), [desenvolvimento](docs/desenvolvimento.md#testes) |
+| Testes automatizados | Mais de 170 testes offline cobrando convenções, contratos e camada semântica | [`tests/`](tests), [desenvolvimento](docs/desenvolvimento.md#testes) |
 | Desenvolvimento com IA | Agente de IA como par de programação, com guardrails que bloqueiam ações destrutivas | [Desenvolvimento assistido por IA](#desenvolvimento-assistido-por-ia) |
 
 ## Arquitetura
@@ -71,8 +72,8 @@ Se um contrato for violado, o job para ali e as métricas não são republicadas
 | Camada | Tabelas | Papel |
 |---|---|---|
 | 🥉 Bronze | 5 streaming tables | Cópia fiel e incremental da origem, com metadados de ingestão. Única camada que lê `samples.bakehouse` |
-| 🥈 Silver | 3 materialized views + 1 streaming table | Tipos, padronização, enriquecimento, expectations de qualidade e sentimento por IA |
-| 🥇 Gold | 6 marts | Vendas por dia, produto e país, desempenho e sentimento por franquia, ranking de clientes |
+| 🥈 Silver | 3 materialized views + 2 streaming tables | Tipos, padronização, enriquecimento, expectations de qualidade, sentimento e opiniões por IA |
+| 🥇 Gold | 7 marts | Vendas por dia, produto e país, desempenho, sentimento e opiniões por franquia, ranking de clientes |
 
 Detalhe de cada tabela em [docs/camadas-de-dados.md](docs/camadas-de-dados.md).
 
@@ -81,6 +82,12 @@ Detalhe de cada tabela em [docs/camadas-de-dados.md](docs/camadas-de-dados.md).
 **Sentimento das avaliações.** A tabela `silver.reviews_sentiment` classifica cada avaliação como `positive`,
 `negative`, `neutral` ou `mixed` com a AI Function `ai_analyze_sentiment`, direto no SQL do pipeline, sem
 endpoint de modelo para manter. A gold agrega o resultado em um `net_sentiment` ∈ [-1, 1] por franquia.
+
+**Por que o sentimento é ruim.** A tabela `silver.review_product_opinions` usa `ai_extract` para tirar de cada
+avaliação **qual produto foi elogiado ou criticado e por qual motivo** (sabor, textura, frescor, preço,
+disponibilidade). O dashboard mostra o produto mais criticado de cada franquia, e o Genie responde perguntas como
+*"Por que as avaliações da Tokyo Treats são negativas?"*. A funcionalidade nasceu de uma
+[especificação aprovada antes do código](specs/001-opinioes-por-produto.md), com critérios de aceite medidos.
 
 **Perguntas em linguagem natural.** O Genie space *Bakehouse Lakehouse - Vendas e Satisfação* responde em português
 perguntas como *"Quais franquias têm o pior sentimento nas avaliações?"*. Ele consulta a metric view, então
@@ -183,8 +190,6 @@ Passo a passo completo, estrutura do repositório e convenções em [docs/desenv
 
 ## Próximos passos
 
-- Classificar o **tema** de cada avaliação (produto, atendimento, preço, espera) com `ai_classify`, para
-  explicar *por que* o sentimento de uma franquia caiu.
 - **Avaliar a qualidade da IA:** comparar o sentimento do modelo com uma amostra rotulada manualmente.
 - **Benchmarks do Genie** versionados, com perguntas e SQL esperado.
 - Custo por execução a partir das system tables de billing.

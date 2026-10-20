@@ -54,6 +54,7 @@ Todos os testes rodam **offline**, sem conexão com o Databricks, no CI e na má
 | `tests/test_enforce_data_contracts.py` | A verificação em execução (`src/jobs/enforce_data_contracts.py`) |
 | `tests/test_semantic_layer.py` | A camada semântica: só usa colunas do contrato da fonte, nunca colunas de dado pessoal |
 | `tests/test_genie_space.py` | A configuração versionada do Genie space |
+| `tests/test_product_opinions.py` | Os critérios da [spec 001](../specs/001-opinioes-por-produto.md): listas fechadas iguais na extração, nas expectations e nos contratos, e extração uma única vez por avaliação |
 
 ## Estrutura do repositório
 
@@ -68,8 +69,8 @@ Todos os testes rodam **offline**, sem conexão com o Databricks, no CI e na má
 ├── src/
 │   ├── pipelines/bakehouse/transformations/
 │   │   ├── bronze/                     # 5 tabelas de ingestão
-│   │   ├── silver/                     # 4 tabelas limpas
-│   │   └── gold/                       # 6 marts
+│   │   ├── silver/                     # 5 tabelas limpas
+│   │   └── gold/                       # 7 marts
 │   ├── dashboards/bakehouse_sales.lvdash.json
 │   └── jobs/
 │       ├── enforce_data_contracts.py   # Confere tabelas publicadas x contratos (tarefa do job)
@@ -78,7 +79,7 @@ Todos os testes rodam **offline**, sem conexão com o Databricks, no CI e na má
 ├── semantic/gold/sales_metrics.yaml    # Metric view de vendas, ver semantic/README.md
 ├── genie/                              # Genie spaces versionados, ver genie/README.md
 ├── contracts/                          # Contratos de dados (ODCS v3), ver contracts/README.md
-│   ├── silver/transactions.yaml
+│   ├── silver/                         # transactions, review_product_opinions
 │   └── gold/                           # 1 contrato por mart
 ├── tests/                              # Testes offline (ver tabela acima)
 ├── docs/                               # Esta documentação

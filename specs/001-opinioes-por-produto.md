@@ -168,4 +168,30 @@ e o SQL validado:
 
 ## 11. Resultado
 
-*Preenchido depois da implementação.*
+Medido em `bakehouse_dev` em 20/10/2026, na carga inicial. Os números de produção entram aqui depois do
+deploy.
+
+| Nº | Resultado | Situação |
+|---|---|---|
+| CA1 | Expectations e testes offline (`tests/test_product_opinions.py`) garantem as listas fechadas; os 6 produtos extraídos existem em `silver.transactions` | ✅ |
+| CA2 | 2 de 204 avaliações (1,0%) sem menção. As duas citam produtos: falha do modelo, não ausência de produto (ver limitações) | ✅ |
+| CA3 | `enforce_data_contracts`: 9/9 contratos satisfeitos, chaves sem duplicatas | ✅ |
+| CA4 | Avaliações `negative`: 96,7% das menções negativas. Avaliações `positive`: 89,1% positivas | ✅ |
+| CA5 | Amostra de 30 menções em [001-amostra-ca5.csv](001-amostra-ca5.csv), aguardando a rotulagem do autor | ⏳ |
+| CA6 | Segunda atualização sem avaliação nova: 1.007 linhas e `_ingested_at` iguais antes e depois | ✅ |
+| CA7 | Consultas do dashboard testadas; a gold soma as mesmas 1.007 menções e 466 críticas da silver | ✅ |
+| CA8 | Genie de dev respondeu às duas perguntas com o mart novo, em português e com motivos traduzidos | ✅ |
+| CA9 | CI do PR de implementação | ⏳ |
+
+**Números da carga:** 1.007 menções em 202 avaliações, 466 delas negativas. Os produtos mais criticados são
+Orchard Oasis (74 críticas de sabor) e Golden Gate Ginger (68 de sabor). Austin Almond Biscotti e Outback
+Oatmeal dividem as críticas entre sabor e textura.
+
+**Respostas do Genie (CA8):**
+- *Tokyo Treats:* críticas concentradas em sabor e textura; o produto mais criticado é o Orchard Oasis, pelo
+  sabor (4 críticas).
+- *Japão:* Golden Gate Ginger, Austin Almond Biscotti e Outback Oatmeal empatam com 33 críticas. A resposta
+  cita o empate, mas apresenta o primeiro como "o que mais recebe críticas".
+
+**Limitações observadas:** as 2 avaliações sem menção (ids 48 e 163) citam produtos no texto; o modelo não
+devolveu nenhuma menção para elas. Como a silver é streaming, elas não são reprocessadas automaticamente.
