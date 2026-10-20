@@ -105,7 +105,7 @@ recalcula razões como o ticket médio corretamente em qualquer nível de agrega
 
 ### 📊 Dashboard
 
-**`[<target>] Bakehouse - Vendas e Satisfacao`**, com as páginas *Visão geral* e *Filtros*. Vendas diárias e
+**`[<target>] Bakehouse Lakehouse - Vendas e Satisfação`**, com as páginas *Visão geral* e *Filtros*. Vendas diárias e
 mix de produtos vêm da metric view `gold.sales_metrics` (via `MEASURE()`); desempenho das franquias e
 sentimento vêm das tabelas gold.
 

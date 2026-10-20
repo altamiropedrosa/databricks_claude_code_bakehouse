@@ -2,7 +2,7 @@
   "datasets": [
     {
       "name": "ds_daily",
-      "displayName": "Vendas diarias por franquia",
+      "displayName": "Vendas diárias por franquia",
       "queryLines": [
         "SELECT transaction_date, franchise_id, franchise_name, franchise_city AS city, ",
         "franchise_country AS country, payment_method, ",
@@ -28,7 +28,7 @@
         },
         {
           "displayName": "Franquias Ativas",
-          "description": "Franquias com ao menos uma venda no periodo",
+          "description": "Franquias com ao menos uma venda no período",
           "expression": "COUNT(DISTINCT `franchise_id`)"
         }
       ]
@@ -66,7 +66,7 @@
     },
     {
       "name": "ds_sentiment_mix",
-      "displayName": "Mix de sentimento por pais",
+      "displayName": "Mix de sentimento por país",
       "queryLines": [
         "SELECT country, sentiment, review_count FROM ( ",
         "SELECT country, stack(4, ",
@@ -79,7 +79,7 @@
   "pages": [
     {
       "name": "overview",
-      "displayName": "Visao geral",
+      "displayName": "Visão geral",
       "pageType": "PAGE_TYPE_CANVAS",
       "layoutVersion": "GRID_V1",
       "layout": [
@@ -88,9 +88,9 @@
             "name": "header",
             "multilineTextboxSpec": {
               "lines": [
-                "# Bakehouse - Vendas e Satisfacao\n",
+                "# Bakehouse Lakehouse - Vendas e Satisfação\n",
                 "\n",
-                "Rede com 48 franquias em 9 paises. Receita, pedidos e ticket medio por periodo, mix de produtos e meios de pagamento, desempenho por franquia e pais, e o sentimento dos reviews (ai_analyze_sentiment). Use a pagina **Filtros** para recortar por data e pais."
+                "Rede com 48 franquias em 9 países. Receita, pedidos e ticket médio por período, mix de produtos e meios de pagamento, desempenho por franquia e país, e o sentimento dos reviews (ai_analyze_sentiment). Use a página **Filtros** para recortar por data e país."
               ]
             }
           },
@@ -214,7 +214,7 @@
               "encodings": {
                 "value": {
                   "fieldName": "measure(Ticket Medio)",
-                  "displayName": "Ticket medio",
+                  "displayName": "Ticket médio",
                   "format": {
                     "type": "number-currency",
                     "currencyCode": "USD",
@@ -227,7 +227,7 @@
               },
               "frame": {
                 "showTitle": true,
-                "title": "Ticket medio"
+                "title": "Ticket médio"
               }
             }
           },
@@ -269,7 +269,7 @@
                 "showTitle": true,
                 "title": "Franquias ativas",
                 "showDescription": true,
-                "description": "Com ao menos uma venda no periodo"
+                "description": "Com ao menos uma venda no período"
               }
             }
           },
@@ -342,7 +342,7 @@
               },
               "frame": {
                 "showTitle": true,
-                "title": "Receita diaria"
+                "title": "Receita diária"
               }
             }
           },
@@ -410,7 +410,7 @@
                 "showTitle": true,
                 "title": "Mix de meio de pagamento",
                 "showDescription": true,
-                "description": "Participacao na receita"
+                "description": "Participação na receita"
               }
             }
           },
@@ -543,8 +543,8 @@
                     "colorRamp": {
                       "mode": "custom-sequential",
                       "colors": {
-                        "start": "#F4D6A0",
-                        "end": "#8C3B1F"
+                        "start": "#FFC2B5",
+                        "end": "#FF3621"
                       }
                     }
                   }
@@ -639,7 +639,7 @@
                   },
                   {
                     "fieldName": "country",
-                    "displayName": "Pais"
+                    "displayName": "País"
                   },
                   {
                     "fieldName": "orders",
@@ -659,7 +659,7 @@
                   },
                   {
                     "fieldName": "avg_ticket",
-                    "displayName": "Ticket medio",
+                    "displayName": "Ticket médio",
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
@@ -671,7 +671,7 @@
                   },
                   {
                     "fieldName": "unique_customers",
-                    "displayName": "Clientes unicos"
+                    "displayName": "Clientes únicos"
                   }
                 ]
               },
@@ -679,7 +679,7 @@
                 "showTitle": true,
                 "title": "Ranking de franquias",
                 "showDescription": true,
-                "description": "Acumulado; filtra por pais"
+                "description": "Acumulado; filtra por país"
               }
             }
           },
@@ -695,7 +695,7 @@
             "name": "sentiment_header",
             "multilineTextboxSpec": {
               "lines": [
-                "## Satisfacao dos clientes\n",
+                "## Satisfação dos clientes\n",
                 "\n",
                 "Sentimento de cada review classificado com ai_analyze_sentiment."
               ]
@@ -747,7 +747,7 @@
                 },
                 "y": {
                   "fieldName": "country",
-                  "displayName": "Pais",
+                  "displayName": "País",
                   "scale": {
                     "type": "categorical"
                   }
@@ -760,19 +760,19 @@
                     "mappings": [
                       {
                         "value": "Positivo",
-                        "color": "#2A9D8F"
+                        "color": "#5A6F77"
                       },
                       {
                         "value": "Misto",
-                        "color": "#E9C46A"
+                        "color": "#8D9BA1"
                       },
                       {
                         "value": "Neutro",
-                        "color": "#9AA5B1"
+                        "color": "#C2CBCE"
                       },
                       {
                         "value": "Negativo",
-                        "color": "#E76F51"
+                        "color": "#FF3621"
                       }
                     ]
                   }
@@ -780,7 +780,7 @@
               },
               "frame": {
                 "showTitle": true,
-                "title": "Sentimento dos reviews por pais"
+                "title": "Sentimento dos reviews por país"
               }
             }
           },
@@ -852,7 +852,7 @@
                   },
                   {
                     "fieldName": "country",
-                    "displayName": "Pais"
+                    "displayName": "País"
                   },
                   {
                     "fieldName": "reviews",
@@ -879,7 +879,7 @@
                   },
                   {
                     "fieldName": "net_sentiment",
-                    "displayName": "Sentimento liquido",
+                    "displayName": "Sentimento líquido",
                     "format": {
                       "type": "number",
                       "decimalPlaces": {
@@ -899,7 +899,7 @@
                             "operator": "<"
                           },
                           "backgroundColor": {
-                            "hex": "#F8D3C8"
+                            "hex": "#FFE1DB"
                           }
                         },
                         {
@@ -911,7 +911,7 @@
                             "operator": ">="
                           },
                           "backgroundColor": {
-                            "hex": "#CDEBE6"
+                            "hex": "#E3E8EA"
                           }
                         }
                       ]
@@ -923,7 +923,7 @@
                 "showTitle": true,
                 "title": "Sentimento por franquia",
                 "showDescription": true,
-                "description": "Sentimento liquido = (positivos - negativos) / reviews classificados"
+                "description": "Sentimento líquido = (positivos - negativos) / reviews classificados"
               }
             }
           },
@@ -990,7 +990,7 @@
               },
               "frame": {
                 "showTitle": true,
-                "title": "Periodo"
+                "title": "Período"
               }
             }
           },
@@ -1100,7 +1100,7 @@
               },
               "frame": {
                 "showTitle": true,
-                "title": "Pais"
+                "title": "País"
               }
             }
           },
@@ -1117,33 +1117,33 @@
   "uiSettings": {
     "theme": {
       "canvasBackgroundColor": {
-        "light": "#FCFAF7",
-        "dark": "#1F1B18"
+        "light": "#F5F6F7",
+        "dark": "#0B0F11"
       },
       "widgetBackgroundColor": {
         "light": "#FFFFFF",
-        "dark": "#2A2420"
+        "dark": "#161B1E"
       },
       "widgetBorderColor": {
         "light": "#FFFFFF",
-        "dark": "#2A2420"
+        "dark": "#161B1E"
       },
       "fontColor": {
-        "light": "#2B1D14",
-        "dark": "#F2E8DF"
+        "light": "#1B3139",
+        "dark": "#EEF1F2"
       },
       "selectionColor": {
-        "light": "#2272B4",
-        "dark": "#8ACAFF"
+        "light": "#FF3621",
+        "dark": "#FF6A4D"
       },
       "visualizationColors": [
-        "#8C3B1F",
-        "#E07A3F",
-        "#F2B84B",
-        "#4E79A7",
-        "#2A9D8F",
-        "#B07AA1",
-        "#76B7B2"
+        "#FF3621",
+        "#1B3139",
+        "#5A6F77",
+        "#8D9BA1",
+        "#C2CBCE",
+        "#3E5560",
+        "#E3E8EA"
       ],
       "widgetHeaderAlignment": "LEFT"
     }
