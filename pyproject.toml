@@ -19,6 +19,7 @@ dev = [
     "databricks-connect>=16.4,<16.5",
     "ipykernel",
     "pyyaml>=6.0.3",
+    "mcp>=2.3.0",
 ]
 
 [project.scripts]

@@ -48,7 +48,11 @@ def test_layout_has_sql_for_every_layer():
 def test_catalog_name_never_hardcoded():
     catalogs = _target_catalogs()
     assert catalogs, "no literal catalog found in the databricks.yml targets"
-    files = [p for p in [*RESOURCES.rglob("*"), *(ROOT / "src").rglob("*")] if p.is_file()]
+    files = [
+        p
+        for p in [*RESOURCES.rglob("*"), *(ROOT / "src").rglob("*")]
+        if p.is_file() and "__pycache__" not in p.parts  # bytecode is not source
+    ]
     offenders = [
         f"{p.relative_to(ROOT)}: {catalog}"
         for p in files
