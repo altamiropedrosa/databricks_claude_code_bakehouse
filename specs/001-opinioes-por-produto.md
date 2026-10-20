@@ -5,7 +5,7 @@
 | **Status** | Aprovada |
 | **Autor** | Altamiro Pedrosa |
 | **Data** | 20/10/2026 (proposta e aprovação, PR #18) |
-| **Implementação** | A definir, depois da aprovação |
+| **Implementação** | PR #19 |
 
 ## 1. Problema
 
@@ -131,7 +131,7 @@ e o SQL validado:
 | CA2 | No máximo 5% das avaliações com texto ficam sem nenhuma menção | Consulta após a carga, resultado registrado na seção 11 |
 | CA3 | Nenhuma linha duplicada por `review_id` + `product` na silver e por `franchise_id` + `product` + `reason` na gold | Verificação de chave do `enforce_data_contracts` |
 | CA4 | Em avaliações `negative`, pelo menos 70% das menções são negativas; em `positive`, pelo menos 70% são positivas | Consulta após a carga, registrada na seção 11 |
-| CA5 | Concordância de pelo menos 80% em `opinion` e 70% em `reason`, numa amostra de 30 menções rotuladas manualmente pelo autor | Amostra e resultado registrados na seção 11 |
+| CA5 | Concordância de pelo menos 80% em `opinion` e 70% em `reason`, numa amostra de 30 menções rotuladas manualmente pelo autor (alterado na implementação, ver seção 10) | Amostra e resultado registrados na seção 11 |
 | CA6 | Uma segunda atualização do pipeline, sem avaliação nova, não altera a silver | Contagem e `_ingested_at` antes e depois |
 | CA7 | O dashboard mostra a seção nova, e as consultas batem com a gold | Consultas testadas antes do deploy |
 | CA8 | O Genie responde às duas perguntas do RF5 usando o mart novo | Conversation API, resposta registrada na seção 11 |
@@ -166,6 +166,11 @@ e o SQL validado:
 | **Q3 · Limites:** 5% (CA2), 70% (CA4) e 80%/70% (CA5) são aceitáveis? | Mantidos, coerentes com a amostra da seção 3 |
 | **Q4 · Camada semântica:** criar uma metric view de opiniões para o Genie, ou o mart gold basta nesta entrega? | O mart gold basta. Uma metric view de opiniões fica para uma spec futura |
 
+**Alteração durante a implementação (PR #19):** a pedido do autor, a amostra do CA5 foi rotulada pelo
+assistente de IA (Claude Code), e não manualmente pelo autor. O critério passa a medir a concordância entre o
+modelo de extração e uma segunda leitura feita por outro modelo, o que **não equivale a uma avaliação humana
+independente**. Os rótulos e o critério de cada um estão no arquivo da amostra, para revisão do autor.
+
 ## 11. Resultado
 
 Medido em `bakehouse_dev` em 20/10/2026, na carga inicial. Os números de produção entram aqui depois do
@@ -177,7 +182,7 @@ deploy.
 | CA2 | 2 de 204 avaliações (1,0%) sem menção. As duas citam produtos: falha do modelo, não ausência de produto (ver limitações) | ✅ |
 | CA3 | `enforce_data_contracts`: 9/9 contratos satisfeitos, chaves sem duplicatas | ✅ |
 | CA4 | Avaliações `negative`: 96,7% das menções negativas. Avaliações `positive`: 89,1% positivas | ✅ |
-| CA5 | Amostra de 30 menções em [001-amostra-ca5.csv](001-amostra-ca5.csv), aguardando a rotulagem do autor | ⏳ |
+| CA5 | Opinião: 30/30 (100%). Motivo: 27/30 (90%). Rotulado pelo assistente de IA a pedido do autor (seção 10); amostra em [001-amostra-ca5.csv](001-amostra-ca5.csv) | ✅ |
 | CA6 | Segunda atualização sem avaliação nova: 1.007 linhas e `_ingested_at` iguais antes e depois | ✅ |
 | CA7 | Consultas do dashboard testadas; a gold soma as mesmas 1.007 menções e 466 críticas da silver | ✅ |
 | CA8 | Genie de dev respondeu às duas perguntas com o mart novo, em português e com motivos traduzidos | ✅ |
@@ -193,5 +198,15 @@ Oatmeal dividem as críticas entre sabor e textura.
 - *Japão:* Golden Gate Ginger, Austin Almond Biscotti e Outback Oatmeal empatam com 33 críticas. A resposta
   cita o empate, mas apresenta o primeiro como "o que mais recebe críticas".
 
-**Limitações observadas:** as 2 avaliações sem menção (ids 48 e 163) citam produtos no texto; o modelo não
-devolveu nenhuma menção para elas. Como a silver é streaming, elas não são reprocessadas automaticamente.
+**Rotulagem do CA5:** a opinião está certa quando bate com o que o cliente disse sobre aquele produto; o motivo,
+quando é o principal citado (com dois motivos de mesmo peso, qualquer um vale). Os 3 erros de motivo:
+- #13: o elogio ao Outback Oatmeal é à textura, e o modelo disse sabor;
+- #16 e #19: o texto não dá motivo (o certo seria `other`), e o modelo disse sabor. O #25 tem o mesmo texto do #19
+  e acertou `other`: o modelo não é totalmente consistente entre textos idênticos.
+
+**Limitações observadas:**
+- As 2 avaliações sem menção (ids 48 e 163) citam produtos no texto; o modelo não devolveu nenhuma menção para
+  elas. Como a silver é streaming, elas não são reprocessadas automaticamente.
+- Produto que o cliente ainda não provou ("can't wait to try the Pearly Pies") pode virar uma menção
+  `neutral`/`other`, quando o ideal seria não gerar menção.
+- Opinião sem motivo explícito tende a ser classificada como sabor (`taste`), o motivo mais frequente.
