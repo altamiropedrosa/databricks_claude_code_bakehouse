@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Status** | Aprovada |
+| **Status** | Entregue |
 | **Autor** | Altamiro Pedrosa |
 | **Data** | 20/10/2026 (proposta e aprovação, PR #18) |
-| **Implementação** | PR #19 |
+| **Implementação** | PR #19, em produção desde 20/10/2026 |
 
 ## 1. Problema
 
@@ -173,8 +173,7 @@ independente**. Os rótulos e o critério de cada um estão no arquivo da amostr
 
 ## 11. Resultado
 
-Medido em `bakehouse_dev` em 20/10/2026, na carga inicial. Os números de produção entram aqui depois do
-deploy.
+Medido em `bakehouse_dev` em 20/10/2026, na carga inicial, e conferido em produção depois do deploy (abaixo).
 
 | Nº | Resultado | Situação |
 |---|---|---|
@@ -186,13 +185,29 @@ deploy.
 | CA6 | Segunda atualização sem avaliação nova: 1.007 linhas e `_ingested_at` iguais antes e depois | ✅ |
 | CA7 | Consultas do dashboard testadas; a gold soma as mesmas 1.007 menções e 466 críticas da silver | ✅ |
 | CA8 | Genie de dev respondeu às duas perguntas com o mart novo, em português e com motivos traduzidos | ✅ |
-| CA9 | CI do PR de implementação | ⏳ |
+| CA9 | CI verde no PR #19, incluindo a carga inicial com IA no target `ci` (9/9 contratos) | ✅ |
 
-**Números da carga:** 1.007 menções em 202 avaliações, 466 delas negativas. Os produtos mais criticados são
+**Números da carga em dev:** 1.007 menções em 202 avaliações, 466 delas negativas. Os produtos mais criticados são
 Orchard Oasis (74 críticas de sabor) e Golden Gate Ginger (68 de sabor). Austin Almond Biscotti e Outback
 Oatmeal dividem as críticas entre sabor e textura.
 
-**Respostas do Genie (CA8):**
+**Em produção** (`bakehouse_prod`, 20/10/2026, depois do deploy do PR #19):
+
+| Critério | Produção |
+|---|---|
+| CA1 | 6 produtos, todos em `silver.transactions` |
+| CA2 | 2 de 204 avaliações (1,0%) sem menção |
+| CA3 | Job de prod com 9/9 contratos satisfeitos |
+| CA4 | 94,6% das menções negativas em avaliações negativas; 88,5% positivas nas positivas |
+| CA7 | Gold e silver somam 1.011 menções e 459 críticas |
+| CA8 | Genie de prod respondeu sobre a Tokyo Treats usando o mart novo |
+
+Os totais de produção diferem um pouco dos de dev (1.011 contra 1.007 menções; 459 contra 466 críticas)
+porque a extração não é determinística: o mesmo texto pode render menções um pouco diferentes em cargas
+separadas. Os padrões se mantêm: em produção, Golden Gate Ginger (73) e Orchard Oasis (72) lideram as críticas
+de sabor.
+
+**Respostas do Genie (CA8, em dev):**
 - *Tokyo Treats:* críticas concentradas em sabor e textura; o produto mais criticado é o Orchard Oasis, pelo
   sabor (4 críticas).
 - *Japão:* Golden Gate Ginger, Austin Almond Biscotti e Outback Oatmeal empatam com 33 críticas. A resposta
