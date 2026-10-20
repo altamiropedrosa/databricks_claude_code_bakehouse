@@ -41,7 +41,7 @@ confere o schema publicado no Unity Catalog, a unicidade da chave primária e o 
 contrato, aplica as tags de contrato e de dado pessoal, e falha a execução se algum contrato for violado.
 Em seguida, a tarefa `publish_metric_views` republica a [camada semântica](../semantic/README.md)
 (`gold.sales_metrics`), que o dashboard usa para os dados de vendas, e a tarefa `publish_genie_space`
-cria ou atualiza o [Genie space](../genie/README.md) `[<target>] Bakehouse - Vendas e Satisfação` em cima dela.
+cria ou atualiza o [Genie space](../genie/README.md) `[<target>] Bakehouse Lakehouse - Vendas e Satisfação` em cima dela.
 
 ## Testes
 

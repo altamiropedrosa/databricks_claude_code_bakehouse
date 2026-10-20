@@ -84,14 +84,12 @@ Detalhe de cada tabela em [docs/camadas-de-dados.md](docs/camadas-de-dados.md).
 `negative`, `neutral` ou `mixed` com a AI Function `ai_analyze_sentiment`, direto no SQL do pipeline, sem
 endpoint de modelo para manter. A gold agrega o resultado em um `net_sentiment` ∈ [-1, 1] por franquia.
 
-**Perguntas em linguagem natural.** O Genie space *Bakehouse - Vendas e Satisfação* responde em português
+**Perguntas em linguagem natural.** O Genie space *Bakehouse Lakehouse - Vendas e Satisfação* responde em português
 perguntas como *"Quais franquias têm o pior sentimento nas avaliações?"*. Ele consulta a metric view, então
 a IA usa as **mesmas definições de receita e ticket médio** do dashboard em vez de inventar o próprio cálculo.
 A configuração (instruções, perguntas de exemplo, tabelas) é versionada em YAML e publicada pelo job.
 
-<!-- Screenshot do Genie respondendo: salvar em docs/images/genie.png e descomentar
-![Genie respondendo uma pergunta em português](docs/images/genie.png)
--->
+![Genie respondendo em português quais franquias têm o pior sentimento nas avaliações](docs/images/genie.svg)
 
 ## Qualidade e governança
 
@@ -218,5 +216,4 @@ Passo a passo completo, estrutura do repositório e convenções em [docs/desenv
 
 ## Autor
 
-**Altamiro Pedrosa** · [GitHub](https://github.com/altamiropedrosa)
-<!-- Adicionar: · [LinkedIn](https://www.linkedin.com/in/<perfil>) -->
+**Altamiro Pedrosa** · [LinkedIn](https://www.linkedin.com/in/altamiropedrosa) · [GitHub](https://github.com/altamiropedrosa)
