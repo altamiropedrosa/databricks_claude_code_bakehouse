@@ -67,6 +67,8 @@ def test_space_header(path):
     assert definition["title"] and not definition["title"].startswith("["), "the target prefix is added on publish"
     assert len(definition["description"]) > 80, "the description drives routing: state purpose and scope"
     assert definition["space"]["version"] == 2
+    for previous in definition.get("previous_titles", []):
+        assert previous != definition["title"] and not previous.startswith("[")
 
 
 @pytest.mark.parametrize("path", SPACE_FILES, ids=_id)
@@ -158,6 +160,18 @@ def test_find_space_by_title():
     assert genie.find_space(spaces, "[ci] A") is None
     with pytest.raises(RuntimeError, match="2 Genie spaces"):
         genie.find_space([*spaces, Space("3", "[dev] A")], "[dev] A")
+
+
+def test_renamed_space_is_found_by_its_previous_title():
+    class Space:
+        def __init__(self, space_id, title):
+            self.space_id, self.title = space_id, title
+
+    definition = {"title": "B", "previous_titles": ["A"]}
+    spaces = [Space("1", "[prod] A"), Space("2", "[dev] B")]
+    assert genie.find_existing_space(spaces, definition, "prod").space_id == "1"
+    assert genie.find_existing_space(spaces, definition, "dev").space_id == "2"
+    assert genie.find_existing_space(spaces, definition, "ci") is None
 
 
 def test_job_publishes_the_space_after_the_metric_views():

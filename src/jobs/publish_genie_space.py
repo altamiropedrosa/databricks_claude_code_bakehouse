@@ -2,7 +2,7 @@
 
 Runs in bakehouse_medallion_job after the metric views are published. The space is identified by
 its title, "[<target>] <title>", so every run updates the same space instead of creating a new
-one. The YAML `space` block is the Genie serialized_space: ${catalog} is replaced with the target
+one; after a rename, the space is found by one of its `previous_titles` and gets the new title. The YAML `space` block is the Genie serialized_space: ${catalog} is replaced with the target
 catalog, single strings become the arrays the API expects, and id-keyed lists are sorted.
 """
 
@@ -69,6 +69,15 @@ def find_space(spaces, title: str):
     return matches[0] if matches else None
 
 
+def find_existing_space(spaces, definition: dict, target: str):
+    """The space under its current title or, after a rename, under one of its previous_titles."""
+    for title in [definition["title"], *definition.get("previous_titles", [])]:
+        space = find_space(spaces, f"[{target}] {title}")
+        if space:
+            return space
+    return None
+
+
 def _all_spaces(w):
     token = None
     while True:
@@ -101,7 +110,7 @@ def main(argv: list[str] | None = None) -> None:
         title = space_title(definition, args.target)
         serialized = json.dumps(build_space(definition, args.catalog), ensure_ascii=False)
         fields = {"title": title, "description": " ".join(definition["description"].split())}
-        existing = find_space(spaces, title)
+        existing = find_existing_space(spaces, definition, args.target)
         if existing:
             w.genie.update_space(
                 existing.space_id, serialized_space=serialized, warehouse_id=args.warehouse_id, **fields
