@@ -29,6 +29,10 @@ space:
         question: Em que dia da semana e horário vendemos mais?
       - id: a1000000000000000000000000000006
         question: Quais franquias têm o pior sentimento nas avaliações?
+      - id: a1000000000000000000000000000007
+        question: Por que as avaliações da Tokyo Treats são negativas?
+      - id: a1000000000000000000000000000008
+        question: Qual produto mais recebe críticas no Japão?
   data_sources:
     metric_views:
       - identifier: ${catalog}.gold.sales_metrics
@@ -42,6 +46,20 @@ space:
           - {column_name: customer_country, enable_format_assistance: true, enable_entity_matching: true}
           - {column_name: customer_continent, enable_format_assistance: true, enable_entity_matching: true}
     tables:
+      - identifier: ${catalog}.gold.product_opinions_by_franchise
+        column_configs:
+          - {column_name: franchise_name, enable_format_assistance: true, enable_entity_matching: true}
+          - {column_name: city, enable_format_assistance: true, enable_entity_matching: true}
+          - {column_name: country, enable_format_assistance: true, enable_entity_matching: true}
+          - {column_name: product, enable_format_assistance: true, enable_entity_matching: true}
+          - column_name: reason
+            enable_format_assistance: true
+            enable_entity_matching: true
+            synonyms: [motivo, razão, por que, causa]
+          - column_name: negative_mentions
+            synonyms: [críticas, reclamações, opiniões negativas]
+          - column_name: positive_mentions
+            synonyms: [elogios, opiniões positivas]
       - identifier: ${catalog}.gold.sentiment_by_franchise
         column_configs:
           - {column_name: franchise_name, enable_format_assistance: true, enable_entity_matching: true}
@@ -69,6 +87,7 @@ space:
           ## DISAMBIGUATION
           - Os dados são históricos e não chegam até hoje. "Último mês", "este mês", "recentemente" e afins referem-se ao período mais recente disponível nos dados (maior transaction_date em sales_metrics, maior last_review_date em sentiment_by_franchise), nunca à data atual.
           - "Vendas", "vender mais" e "vendemos mais" sem outra indicação significam receita (medida revenue); use unidades (units_sold) só quando o usuário falar em unidades ou quantidade.
+          - "Por que" uma franquia ou produto é mal avaliado: use product_opinions_by_franchise (produto e motivo das críticas). Os valores de reason estão em inglês: responda traduzindo (taste = sabor, texture = textura, freshness = frescor, price = preço, availability = disponibilidade, other = outro).
 
           ## Instructions you must follow when providing summaries
           - Sempre informe o período de dados usado na resposta.
@@ -126,6 +145,31 @@ space:
           LEFT JOIN vendas ON sentiment_by_franchise.franchise_id = vendas.franchise_id
           WHERE sentiment_by_franchise.reviews > 0
           ORDER BY sentiment_by_franchise.net_sentiment ASC, sentiment_by_franchise.reviews DESC
+      - id: b1000000000000000000000000000005
+        question: Por que as avaliações da Tokyo Treats são negativas?
+        usage_guidance: >-
+          Why a franchise is badly rated: products and reasons of the negative opinions extracted from its reviews.
+        sql: |
+          SELECT product_opinions_by_franchise.product, product_opinions_by_franchise.reason,
+                 SUM(product_opinions_by_franchise.negative_mentions) AS criticas,
+                 SUM(product_opinions_by_franchise.positive_mentions) AS elogios
+          FROM ${catalog}.gold.product_opinions_by_franchise
+          WHERE product_opinions_by_franchise.franchise_name = 'Tokyo Treats'
+          GROUP BY ALL
+          HAVING criticas > 0
+          ORDER BY criticas DESC, product_opinions_by_franchise.product
+      - id: b1000000000000000000000000000006
+        question: Qual produto mais recebe críticas no Japão?
+        usage_guidance: Shares are computed from the summed counts, never stored or averaged.
+        sql: |
+          SELECT product_opinions_by_franchise.product,
+                 SUM(product_opinions_by_franchise.negative_mentions) AS criticas,
+                 SUM(product_opinions_by_franchise.mentions) AS mencoes,
+                 ROUND(SUM(product_opinions_by_franchise.negative_mentions) / SUM(product_opinions_by_franchise.mentions), 2) AS percentual_critico
+          FROM ${catalog}.gold.product_opinions_by_franchise
+          WHERE product_opinions_by_franchise.country = 'Japan'
+          GROUP BY ALL
+          ORDER BY criticas DESC
     sql_snippets:
       measures:
         - id: d1000000000000000000000000000001

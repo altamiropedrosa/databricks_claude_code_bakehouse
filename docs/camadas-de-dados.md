@@ -17,6 +17,7 @@ Streaming tables com ingestão incremental e cópia fiel das colunas de origem, 
 | `franchises` | Materialized view | Dimensão de franquias com localização validada, enriquecida com o fornecedor |
 | `transactions` | Materialized view | Tipos corretos, colunas de data derivadas, enriquecida com franquia e cliente. Do cartão, só os **4 últimos dígitos** são mantidos |
 | `reviews_sentiment` | Streaming table | Sentimento classificado com `ai_analyze_sentiment`. Por ser streaming, cada avaliação é pontuada **uma única vez** |
+| `review_product_opinions` | Streaming table | Opinião e motivo para cada produto citado numa avaliação, extraídos com `ai_extract` ([spec 001](../specs/001-opinioes-por-produto.md)). Também extraída uma única vez por avaliação |
 
 **Qualidade de dados:** as tabelas silver usam *expectations*. Registros sem chave, com quantidade ou valor
 não positivos são **descartados**; inconsistências como `total_price ≠ quantity × unit_price` ou meio de
@@ -32,6 +33,7 @@ pagamento desconhecido são **registradas** nas métricas do pipeline, sem desca
 | `franchise_performance` | franquia | Desempenho acumulado e coordenadas para mapas |
 | `sentiment_by_franchise` | franquia | Contagens e `net_sentiment` ∈ [-1, 1] |
 | `top_customers` | cliente | Ranking por receita e produto favorito |
+| `product_opinions_by_franchise` | franquia × produto × motivo | Elogios e críticas a cada produto, e por quê |
 
 As medidas das tabelas diárias são **aditivas**: qualquer agregação é um `SUM`. Para receita, pedidos,
 ticket médio e afins, prefira a [camada semântica](../semantic/README.md) (`gold.sales_metrics`), que já

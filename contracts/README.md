@@ -5,8 +5,8 @@ Cada tabela publicada tem um contrato em `contracts/<camada>/<tabela>.yaml`, no 
 O contrato é a **interface pública** da tabela: colunas, tipos, obrigatoriedade, chave, significado de
 cada coluna, regras de qualidade, dono e prazo de atualização.
 
-Hoje há contrato para todas as tabelas **gold** (obrigatório) e para `silver.transactions`, que é a
-base da camada semântica.
+Hoje há contrato para todas as tabelas **gold** (obrigatório), para `silver.transactions`, que é a
+base da camada semântica, e para `silver.review_product_opinions`, extraída com IA.
 
 ## Como o contrato é aplicado
 
