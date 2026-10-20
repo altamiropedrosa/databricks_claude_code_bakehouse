@@ -89,6 +89,8 @@ disponibilidade). O dashboard mostra o produto mais criticado de cada franquia, 
 *"Por que as avaliações da Tokyo Treats são negativas?"*. A funcionalidade nasceu de uma
 [especificação aprovada antes do código](specs/001-opinioes-por-produto.md), com critérios de aceite medidos.
 
+![Seção "O que os clientes criticam" do dashboard: críticas por produto e motivo, e o produto mais criticado de cada franquia](docs/images/opinioes.png)
+
 **Perguntas em linguagem natural.** O Genie space *Bakehouse Lakehouse - Vendas e Satisfação* responde em português
 perguntas como *"Quais franquias têm o pior sentimento nas avaliações?"*. Ele consulta a metric view, então
 a IA usa as **mesmas definições de receita e ticket médio** do dashboard em vez de inventar o próprio cálculo.
