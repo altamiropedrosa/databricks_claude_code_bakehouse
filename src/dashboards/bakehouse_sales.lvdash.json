@@ -1118,23 +1118,23 @@
     "theme": {
       "canvasBackgroundColor": {
         "light": "#F5F6F7",
-        "dark": "#0B0F11"
+        "dark": "#F5F6F7"
       },
       "widgetBackgroundColor": {
         "light": "#FFFFFF",
-        "dark": "#161B1E"
+        "dark": "#FFFFFF"
       },
       "widgetBorderColor": {
         "light": "#FFFFFF",
-        "dark": "#161B1E"
+        "dark": "#FFFFFF"
       },
       "fontColor": {
         "light": "#1B3139",
-        "dark": "#EEF1F2"
+        "dark": "#1B3139"
       },
       "selectionColor": {
         "light": "#FF3621",
-        "dark": "#FF6A4D"
+        "dark": "#FF3621"
       },
       "visualizationColors": [
         "#FF3621",

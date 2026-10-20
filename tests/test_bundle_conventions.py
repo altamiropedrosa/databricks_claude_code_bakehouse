@@ -136,6 +136,15 @@ def test_dashboard_widgets_bind_existing_fields(path):
             assert used <= names, (widget["name"], used - names)
 
 
+@pytest.mark.parametrize("path", DASHBOARD_FILES, ids=lambda p: p.name)
+def test_dashboard_looks_the_same_in_light_and_dark_mode(path):
+    # The palette and the semantic colors are single hex values designed for a light background.
+    theme = json.loads(path.read_text(encoding="utf-8"))["uiSettings"]["theme"]
+    for key, value in theme.items():
+        if isinstance(value, dict) and "light" in value:
+            assert value["dark"] == value["light"], f"{key}: dark mode must reuse the light color"
+
+
 def test_prod_deploy_is_gated_by_ci_integration():
     workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "databricks.yml").read_text(encoding="utf-8"))
     jobs = workflow["jobs"]
